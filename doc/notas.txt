@@ -1,0 +1,70 @@
+# Criar um par de chaves RSA de 2048 bits e guardar numa keystore na entry "rsa_key_entry"
+keytool -genkey -alias rsa_key_entry -keyalg RSA -keysize 2048 -validity 365 -keystore server.jks -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# Criar keystore com um certificado auto-assinado
+keytool -genkey -keyalg RSA -alias entry -validity 365 -keysize 4096 -keystore selfcertificate.jks -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# Exportar Certificado
+keytool -export -alias "entry" -keystore selfcertificate.jks -storepass "SRSC1819" -storetype pkcs12 -file certificate.cert -noprompt -keypass "SRSC1819"
+
+# Exportar Certificado em Base64
+keytool -exportcert -alias hj -keystore hjselfcertificate.jks -storetype pkcs12 -file hjbase64.cer -rfc
+
+# Verificar um certificado
+keytool -printcert -file certificate.cert
+
+# Importar um certificado para uma keystore (truststore)
+keytool -import -file certificate.cert -alias "entry" -keystore truststore.jks -storetype pkcs12
+
+# Listar Conteúdo
+keytool -list -v -keystore <filename>
+
+
+# Ver os certificados root que estao na cacerts na instalacao da framework JAVA
+keytool -list -v -keystore /Library/Java/Home/lib/security/cacerts 
+
+
+#Gerar certificado autoassinado em formato PKCS12 (numa storetype pkcs12)
+keytool -genkeypair -alias hj -keystore hj.pfx -validity 365 -keyalg DSA -keysize 1024 -storetype pkcs12
+
+-----------------------------------------------------------------------------------------------
+
+# Client keysore + certificate
+keytool -genkey -keyalg RSA -alias "client-cert" -validity 365 -keysize 4096 -keystore ./configs/client/client-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -export -alias "client-cert" -keystore ./configs/client/client-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -file ./configs/client/client.cert -noprompt -keypass "SRSC1819"
+
+# fServer keystore + certificate
+keytool -genkey -keyalg RSA -alias "mainDispatcher-cert" -validity 365 -keysize 4096 -keystore ./configs/fServer/mainDispatcher/mainDispatcher-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -export -alias "mainDispatcher-cert" -keystore ./configs/fServer/mainDispatcher/mainDispatcher-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -file ./configs/fServer/mainDispatcher/mainDispatcher.cert -noprompt -keypass "SRSC1819"
+
+# Client truststore
+keytool -import -file ./configs/fServer/mainDispatcher/mainDispatcher.cert -alias "fServer" -keystore ./configs/client/client-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# AuthenticationServer keysore + certificate + trustsore
+keytool -genkey -keyalg RSA -alias "authenticationServer-cert" -validity 365 -keysize 4096 -keystore ./configs/fServer/authenticationServer/authenticationServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -export -alias "authenticationServer-cert" -keystore ./configs/fServer/authenticationServer/authenticationServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -file ./configs/fServer/authenticationServer/authenticationServer.cert -noprompt -keypass "SRSC1819"
+keytool -import -file ./configs/fServer/mainDispatcher/mainDispatcher.cert -alias "mainDispatcher" -keystore ./configs/fServer/authenticationServer/authenticationServer-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# AccessControlServer keysore + certificate + trustsore
+keytool -genkey -keyalg RSA -alias "accessControlServer-cert" -validity 365 -keysize 4096 -keystore ./configs/fServer/accessControlServer/accessControlServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -export -alias "accessControlServer-cert" -keystore ./configs/fServer/accessControlServer/accessControlServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -file ./configs/fServer/accessControlServer/accessControlServer.cert -noprompt -keypass "SRSC1819"
+keytool -import -file ./configs/fServer/mainDispatcher/mainDispatcher.cert -alias "mainDispatcher" -keystore ./configs/fServer/accessControlServer/accessControlServer-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# storageServer keysore + certificate + trustsore
+keytool -genkey -keyalg RSA -alias "storageServer-cert" -validity 365 -keysize 4096 -keystore ./configs/fServer/storageServer/storageServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -export -alias "storageServer-cert" -keystore ./configs/fServer/storageServer/storageServer-keystore.pkcs12 -storepass "SRSC1819" -storetype pkcs12 -file ./configs/fServer/storageServer/storageServer.cert -noprompt -keypass "SRSC1819"
+keytool -import -file ./configs/fServer/mainDispatcher/mainDispatcher.cert -alias "mainDispatcher" -keystore ./configs/fServer/storageServer/storageServer-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+# add everyone to fServer truststore
+keytool -import -file ./configs/client/client.cert -alias "client" -keystore ./configs/fServer/mainDispatcher/mainDispatcher-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -import -file ./configs/fServer/authenticationServer/authenticationServer.cert -alias "authenticationServer" -keystore ./configs/fServer/mainDispatcher/mainDispatcher-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -import -file ./configs/fServer/accessControlServer/accessControlServer.cert -alias "accessControlServer" -keystore ./configs/fServer/mainDispatcher/mainDispatcher-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+keytool -import -file ./configs/fServer/storageServer/storageServer.cert -alias "storageServer" -keystore ./configs/fServer/mainDispatcher/mainDispatcher-truststore.pkcs12 -storetype pkcs12 -storepass "SRSC1819" -noprompt -keypass "SRSC1819" -dname "CN='', OU='', O='', L='', S='', C=''"
+
+
+
+
+
+
+
+
