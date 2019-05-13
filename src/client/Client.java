@@ -30,7 +30,9 @@ public class Client {
 			
 			in.nextLine();
 		}
+		
 		System.out.println("Exiting...");
+		in.close();
 	}
 	
 }
