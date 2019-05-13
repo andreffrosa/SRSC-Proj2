@@ -1,4 +1,4 @@
-package mainDispatcher;
+package fServer.mainDispatcher;
 
 public class MainDispatcher {
 
