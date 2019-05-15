@@ -1,10 +1,10 @@
-package fServer.mainDispatcher;
+package client;
 
 import java.util.List;
 
 import fileService.RemoteFileService;
 
-public class MainDispatcherImplementation implements RemoteFileService {
+public class RemoteFileServiceClient implements RemoteFileService {
 
 	@Override
 	public boolean login(String username, String password) {

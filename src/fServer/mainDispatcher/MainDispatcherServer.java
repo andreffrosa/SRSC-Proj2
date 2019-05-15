@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import com.sun.net.httpserver.HttpsServer;
 
+import fileService.RemoteFileService;
 import utility.HTTPS;
 import utility.IO;
 import utility.MyKeyStore;
@@ -59,9 +60,8 @@ public class MainDispatcherServer {
 		// TODO: read the loation of the other services
 		
 		
-		//
-
-		MainDispatcher dispatcher = new MainDispatcherImplementation();
+		// Create HTTPS Server
+		RemoteFileService dispatcher = new MainDispatcherImplementation();
 
 		// Passar o endereço 0.0.0.0 também?
 		HttpsServer server = HTTPS.buildServer(dispatcher, ks, keystore_password, ts, port, tls_version, authenticate_clients, ciphersuites, sr);
@@ -70,7 +70,9 @@ public class MainDispatcherServer {
 
 		System.out.println("\n\t#######################################################"
 				         + "\n\t      MainDispatcher ready @ " + "https:/" + server.getAddress() 
-				         + "\n\t      TLS Version: " + tls_version
+				         + "\n\t                TLS Version: " + tls_version
+				         + "\n\t               Chipersuites: " + ciphersuites
+				         + "\n\t               SecureRandom: " + "null"
 				         + "\n\t      Client Authentication: " + authenticate_clients 
 			             + "\n\t#######################################################");
 

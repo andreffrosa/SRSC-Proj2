@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fServer.mainDispatcher;
+package fileService;
 
 import java.util.List;
 
@@ -23,8 +23,8 @@ import javax.ws.rs.core.MediaType;
 
 //TODO: Register, Exceptions a enviar
 
-@Path(MainDispatcher.PATH)
-public interface MainDispatcher {
+@Path(RemoteFileService.PATH)
+public interface RemoteFileService {
 
 	String PATH = "/dispacher";
 	String CHARSET = ";charset=utf-8";
