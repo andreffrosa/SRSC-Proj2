@@ -36,9 +36,9 @@ public interface MainDispatcher {
 	 * @return True if everything if correct (and a token on the authorization header), false if credentials are wrong.
 	 */
 	@POST
-	@Path("/login")
+	@Path("/login/{username}")
 	@Consumes(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean login(String username, String password);
+	public boolean login(@PathParam("username") String username, String password);
 	
 	/**
 	 *  List files or directories on the specified path
@@ -49,7 +49,7 @@ public interface MainDispatcher {
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(@PathParam("username") String username,@PathParam("path") String path);
+	public List<String> listFiles(@PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Creates a directory on the specified path.

@@ -69,7 +69,8 @@ public class MainDispatcherServer {
 		server.start();
 
 		System.out.println("\n\t#######################################################"
-				         + "\n\t      MainDispatcher ready @ " + server.getAddress() 
+				         + "\n\t      MainDispatcher ready @ " + "https:/" + server.getAddress() 
+				         + "\n\t      TLS Version: " + tls_version
 				         + "\n\t      Client Authentication: " + authenticate_clients 
 			             + "\n\t#######################################################");
 
