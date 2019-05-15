@@ -64,7 +64,14 @@ keytool -import -file ./configs/fServer/storageServer/storageServer.cert -alias 
 
 
 
+Esconder nome do ficheiro
+Esconder conteúdo do ficheiro
+Esconder tamanho do ficheiro -> Fazer que tenham o mesmo tamanho com padding
 
+Cliente tem de ter noção do directorio corrente e passa para o storage o path absoluto sempre
 
+ficheiro = manter prova de integridade no ficheiro + DADOS + ASSINATURA DIGITAL
+
+Replicar na storage 3x como directorias raiz diferentes
 
 

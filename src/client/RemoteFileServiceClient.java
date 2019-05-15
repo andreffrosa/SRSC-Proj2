@@ -5,6 +5,12 @@ import java.util.List;
 import fileService.RemoteFileService;
 
 public class RemoteFileServiceClient implements RemoteFileService {
+	
+	private String location;
+	
+	public RemoteFileServiceClient(String location) {
+		this.location = location;
+	}
 
 	@Override
 	public boolean login(String username, String password) {
