@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType;
 @Path(RemoteFileService.PATH)
 public interface RemoteFileService {
 
-	String PATH = "/dispacher";
+	String PATH = "/dispatcher";
 	String CHARSET = ";charset=utf-8";
 	
 	/**
