@@ -9,6 +9,7 @@ public class MainDispatcherImplementation implements RemoteFileService {
 	@Override
 	public boolean login(String username, String password) {
 		// TODO Auto-generated method stub
+		System.out.println(username + ": " + password);
 		return false;
 	}
 
