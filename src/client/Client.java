@@ -4,6 +4,18 @@ import java.util.Scanner;
 
 public class Client {
 
+	//Operations
+	private static final String LOGIN = "login";
+	private static final String LIST_FILES = "ls";
+	private static final String NEW_DIRECTORY = "mkdir";
+	private static final String UPLOAD = "put";
+	private static final String DOWNLOAD = "get";
+	private static final String COPY = "cp";
+	private static final String REMOVE_FILE = "rm";
+	private static final String REMOVE_DIR = "rmdir";
+	private static final String FILE_METADATA = "file";
+	
+	
 	public static void main(String[] args) {
 		
 		// Receive from args the location of the configuration files
