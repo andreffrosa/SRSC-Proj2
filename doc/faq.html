@@ -1,0 +1,256 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>WA#2 FAQs (CSNS 18/19)</title>
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <meta http-equiv="cache-control" content="no-store">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  
+<link href="sd1web.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h2>Shared clarifications on students' FAQs (on-going TP2 or WA#2)</h2>
+<h5><i><b>Obs:</b>
+Questions are organized as Generic (Phase-1 and Phase-2) or
+Specific-Phase 2 Questions
+questions</i></h5>
+<p style="color: black;">
+<hr>
+
+<b>Generic Questions (Phase 1 or Phase2)</b>
+<ul>
+
+<li><b>There are initial materials that I need for the development of WA#2 ?</b>
+<ul>
+No. You must implement all the required modules following the initial
+specifications, providing the required modules and functionality. Everything you
+will need to use are materials prevously explained, related to
+materiais you can find in Labs from lab 5 to lab 8. In particular all
+the requirements for TLS detailed parameterizations (interconnection
+between client and Fserv module, as well as,  Fserv and the other
+modules, is particularly targeted in Lab9, if you use Java JSSE for
+TLS support.
+</ul>
+
+<p>
+<li><b>Is it mandatory to use Java and JSSE Sockets ?</b>
+<ul>
+No, but Java and JSSE is a common and generic support that anyone can use. 
+However you can implement (if you prefer) the interactions between client
+and Fserv endpoints and between Fserv and the other modules
+(Authentication Module, Access-Control Module and Storage Module), as
+well the other extension modules for Phase 2 (optional) using a
+different type of support, ex: REST(/HTTPS/TLS),
+WebServices(/HTTPS/TLS). What is mandatory is to have the TLS layer
+(below) implementing the necessary secure parameterizations, as stated
+for the WA#2 requirements: mutual authentication, TLS protocol-version
+control, and parameterized Ciphersuites.
+</ul>
+
+<p>
+<li><b>The interaction support (in supporting HTTPS interactions, ex.,
+REST) must be HTTP/1.0 or HTTP/1.1 ?</b>
+<ul>
+Can use both: it will be transparent for the security requirements of the
+work assignment. This is more an application-layer choice... 
+</ul>
+
+<p>
+<li><b>Is it mandatory to develop the WA#2 (namely all the components or
+modules in he required architecture) in Java language ?</b>
+<ul>
+You can use different options on your own. Java development will be
+certainly a natural choice, but of course that
+you can implement the required architecture with different
+development and web-programming technologies for web-enabled applications and
+services. The mandatory part is that you must be able to provide
+TLS protection with the security parameterizations and requiements.
+For example, if the client os in Javascipt and the Fserv is a
+Rest-based endpoint, this is not a problem, since the subjacent TLS
+support implement the security parameterizations. The same if you want
+to have the Fiserv endpoint (or even the client side) implemented in
+PhP or in Python... But once more you mst have support for the
+required security baseline for the subjacent TLS.
+</ul>
+
+<p>
+<li><b>The implementation must be based on a distributed architecture
+for deployment in a distributed environment? How ? </b>
+<ul>
+Each module in the solution must be implemented to rum as a
+distributed component in a possible phisically-separated computing
+node instance. It is not a good idea to have a solution in
+which modules are, for example, classes of singleton processes.
+You must have a solution that can be physically distributed, with
+modules representing distributed services in the environment, with a 
+separation of concerns. The solution must be able to be deployed, for
+example, in a datacenter, which each service running in a different
+computer. Also, as it is implicit for the phase 2, the storage module
+can separate the storage access to the storage layer (that could be
+implemented as storage-cloud instamces for example).
+<br>
+For development purposes and demonstration, you must be able to show
+the modules running in separate virtual machines in a virtualized
+environment using one only computer (using Virtual Box or VMware for
+this purpose).
+</ul>
+
+<p>
+<li><b>Related to previous questions: Is it possible to build a solution for the distribution setting
+building and virtualizing optionally the required components as
+docker(ized)-components)?</b>
+<br>
+<ul>
+Yes you can. In ths submisison process you will identify your
+dockerized solution, as well as the built solution, delivering the
+docker-references and runtime support virtualization (ex., standalone docker
+images, maven-based docker images .. etc).
+</ul>
+
+<p>
+<li><b>Is it possible to use stunnel (https://www.stunnel.org) as a support layer to
+establish TLS-enabled tunnels between Fserv and the other modules ?</b>
+<ul>
+Yes. stunnel is a technology to deploy TLS interoperability between
+different machines, as a baseline TLS prorection for host-to-host
+interconnection. You could have a solution for interconnection between FServ module and
+the other back-end modules (but not for client/Fserv interactions. by
+obvious reasons)... But once more: this is a possible
+deployment approach since the required security concerns for the TLS
+layer are addressed following the requirements.
+The solution was not really addressed in previous labs, but this is an
+optional way to go, if you consider to study this solution, its
+principles and why/how this can help you in providing the erquire
+solution. Don't forget in this case that the created TLS tunnels must 
+be deployed in such a way that the baselien security protection of TLS
+parameterizations must be satisfied.
+</ul>
+
+<p>
+<li><b>Is it possible to create a solution for the WA#2 reusing
+components as libraries investigated and discovered that could
+accelerate the development process?</b>
+<ul>
+In general the answer is yes, but it is better to clarify in detail in
+class. For the case of the support for functional requirements (application level) this is a valid approach,
+because the focus of the work are in the security properties
+(according to the requirements of phase 1) and security, availability
+and reliability properties (for the phase 2). However you must take
+care in not using components, at system level that cannot allow you to
+implement the security, reliability and availability (or dependability) requirements, as
+stated for the WA#2 requirements. If not, your solution will be
+penalized. So, the use of "leveraging" components is possible if the
+architectural requirements and dependability properties are not
+affected and addressed as expected.
+</ul>
+<p>
+<p>
+<li><b>Is it required to support file sharing beteen different
+clients?</b>
+<ul>
+No. The solution will be designed for users' interactions
+managing/operating their own files, with no file sharing facilities
+(in a multi-user environment).
+</ul>
+<p>
+
+<li><b>The suggested architecture can support different clients
+operatin the system. Is it required to support these concurrent
+clients and sessions?</b>
+<ul>
+Yes. Your soluiton must support client sessions concurrently,
+meaning that the FServ component must support concurrency of clients'
+interactions to support the client operations. However, each client
+will use a "specific" storage space in the storage component (so you
+dont need to support file sharing in the supported concurrency model). <br>Note:
+as you can find file-sharing and concurrency with encrypted file
+storage in the phase 2, could be a particularly difficult issue to be
+addressed and implemented in useful time.
+
+</ul>
+</ul>
+<hr>
+<b>Phase-2 Specific Questions</b>
+<ul>
+
+<p>
+<li><b>Phase 2 can address different requirements. What are the evaluation criteria for the evaluation process,
+to manage the "realistic effort" vs. "evaluation return"?</b>
+<ul>
+Basically there are four big concerns in possible requirements for
+phase 2: (1) Data-protection (file encryption) in the storage module, as a countermeasure
+against "honest-but-curious" adversaries, ex., system-administrators), requiring an operation model in
+which all the stored files must be managed always encrypted in the
+storage side; (2) Replication to improve availability and reliability
+(in case of crash faults in storage instances); (3) Physical
+separation of replication instances (in such a way that we could adopt
+physically separated storage services); (4) minimization of storage costs
+by using fragmentation, with a RAID-based approach. Of course that
+other condiments could be considered for a "great" solution. 
+However, you must be realistics: take two of the above concerns to be
+solved in phase 2. If you address (1) nd (2) and if your phase 1 is
+perfect, you can arrive to a 20/20.
+
+</ul>
+<p>
+<li><b>Is it mandatory for the phase 2 to integrate the implementation
+with a real multi-cloud storage backend?</b>
+<ul>
+A decoupled-design between the Storage moduleand the file-repository
+system (local-file system and disk used by the storage module) is an initial base for a possible extension of your development
+to be extended in order to use an  "outsourced data-repository system". 
+As it is "suggested" this could be addressed, maintaining the
+dependability guarantees of the system,  benefiting from outsourcing
+and diversity of different cloud storage solutions (ex., high availability,
+protection againt vendor-lock-in practices, optimization of
+pay-per-storage-use models, ubiquity in access, geo-replication for
+low-latency access) and high-availability and reliability conditions
+with resistance againt possible failures or outages of cloud-services without compromising data security and privacy
+that could be uncontrolled by the adoption of "outsourced cloud
+storage services".
+
+However, it is not planned to build such a solution (that could be hot
+;-) .... ) but not compatible to effort and deliverable dates for your work.
+If you can build such a solution, integrated to a real multi-cloud storage scenario you will
+be a champion (clap!) probably adderssing a base for a master-thesis. 
+You can have something emulating for example three replicas
+implemented in the local machine supporting the storage module.
+</ul>
+
+<p>
+<li><b>What kind of improvements will be valuable for reliability and
+availability in the solution for phase 2 ?</b>
+<ul>
+It is expected some "initial and realistic approaches" for the time
+that you have for your work (Deadline: 2/June). The baseline is:
+<ul>
+<li>Fault-tolerance assumptions using replication (files) beyond the
+storage model, only assuming a fail-stop model (or crash-model) and
+implemenetd as replicas supported in the storage module;
+<li>No transactional (ACID base) support for read/write model in replicas
+<li>Static membership (pre-defined) for the number of replicas: three
+is a good number to be considered... ("simple" fail-stop quorum).
+<li>No suport for byzantine-faults or attacks
+<li>Privacy-support in the presence of "honest-but-curious"
+adversaries, as insider attackers (ex., sys-admins)
+</ul>
+More sophisticated solutions, including protection against
+byzantine-intruders (byzantine-intrusion tolerance) or enforced trustability 
+assumptions (requiring trusted execution environments as well as
+trusted software attestation ... ) can be approached with other effort
+and opportunity ... (open ideas and solutions for that ? You can
+discuss in your report such ideas ;-) as addressable future work.
+</ul>
+<p>
+
+
+
+
+</ul>
+<hr>
+
+</body>
+
+</html>
