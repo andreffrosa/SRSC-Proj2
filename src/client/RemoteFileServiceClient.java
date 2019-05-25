@@ -53,7 +53,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	public boolean login(String username, String password) {
 		
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addPathParam(username).post(password);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addPathParam("login").addPathParam(username).post(password);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);

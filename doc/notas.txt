@@ -75,3 +75,18 @@ ficheiro = manter prova de integridade no ficheiro + DADOS + ASSINATURA DIGITAL
 Replicar na storage 3x como directorias raiz diferentes
 
 
+
+
+
+
+
+
+
+
+-Djavax.net.debug=all
+
+
+
+
+
+
