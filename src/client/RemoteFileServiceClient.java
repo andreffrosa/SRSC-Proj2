@@ -1,33 +1,31 @@
 package client;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.List;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import fileService.RemoteFileService;
-import utility.HTTPS;
+import rest.client.RestResponse;
+import rest.client.mySecureRestClient;
+import ssl.CustomSSLSocketFactory;
 import utility.RequestHandler;
 
 public class RemoteFileServiceClient implements RemoteFileService {
 
 	private static final int MAX_TRIES = 3;
 	private String location;
-	private Client client;
+	private mySecureRestClient client;
 
-	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String tls_version, String ciphersuites,
-			String location)
-			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location)
+			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		this.location = location;
-		this.client = HTTPS.buildClient(ks, ks_password, ts, tls_version, ciphersuites);
+		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 	}
 
 	private <T> T processRequest(RequestHandler<T> requestHandler) {
@@ -35,7 +33,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		for (int current_try = 0; current_try < MAX_TRIES; current_try++) {
 			try {
 				return requestHandler.execute(location);
-			} catch (ProcessingException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				//if (e.getMessage().contains("java.net.ConnectException")
 				//		|| e.getMessage().contains("java.net.SocketTimeoutException")) {
@@ -54,13 +52,12 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	public boolean login(String username, String password) {
 		
 		return processRequest((location) -> {
-			Response response = client.target(location).path(RemoteFileService.PATH + "/login/" + username).request()
-					.post(Entity.entity(password, MediaType.APPLICATION_JSON));
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addPathParam(username).post(password);
 
-			if (response.getStatus() == 200) {
-				return (boolean) response.readEntity(boolean.class);
+			if (response.getStatusCode() == 200) {
+				return (boolean) response.getEntity(boolean.class);
 			} else
-				throw new RuntimeException("login: " + response.getStatus());
+				throw new RuntimeException("login: " + response.getStatusCode());
 		});
 	}
 

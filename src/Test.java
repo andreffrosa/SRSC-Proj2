@@ -11,15 +11,6 @@ public class Test {
 
 	public static void main(String[] args) throws Exception {
 
-		// Read Configs
-		Properties tls_properties = IO.loadProperties("./configs/fServer/servertls.conf");
-
-		String tls_version = tls_properties.getProperty("TLS-PROT-ENF");
-		boolean authenticate_clients = tls_properties.getProperty("TLS-AUTH").equals("MUTUAL");
-		String ciphersuites = tls_properties.getProperty("CIPHERSUITES");
-
-		SecureRandom sr = null; // TODO: obter do ficheiro
-
 		// Read Keystore Properties
 		Properties keystore_properties = IO.loadProperties("./configs/client/keystores.conf");
 
@@ -38,7 +29,7 @@ public class Test {
 
 		String location = "https://localhost:8888/";
 		
-		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, tls_version, ciphersuites, location);
+		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, location);
 		
 		client.login("fifo", "xé");
 	}

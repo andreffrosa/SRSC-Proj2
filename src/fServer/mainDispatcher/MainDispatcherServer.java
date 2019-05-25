@@ -4,10 +4,12 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.Properties;
 
-import com.sun.net.httpserver.HttpsServer;
+import javax.net.ssl.SSLServerSocketFactory;
 
 import fileService.RemoteFileService;
-import utility.HTTPS;
+import rest.server.mySecureRestServer;
+import ssl.CustomSSLServerSocketFactory;
+import test.myHelloWorld;
 import utility.IO;
 import utility.MyKeyStore;
 
@@ -26,11 +28,11 @@ public class MainDispatcherServer {
 		// Read Configs
 		Properties tls_properties = IO.loadProperties(args[1]);
 		
-		String tls_version = tls_properties.getProperty("TLS-PROT-ENF");
+		String[] protocols = new String[] {tls_properties.getProperty("TLS-PROT-ENF")};
 		boolean authenticate_clients = tls_properties.getProperty("TLS-AUTH").equals("MUTUAL");
-		String ciphersuites = tls_properties.getProperty("CIPHERSUITES");
-		
-		SecureRandom sr = null; // TODO: obter do ficheiro
+		String[] ciphersuites = new String[] {tls_properties.getProperty("CIPHERSUITES")};
+		String secure_random = tls_properties.getProperty("SECURE-RANDOM");
+		SecureRandom sr = secure_random == null ? null : SecureRandom.getInstance(secure_random);
 		
 		// Read Keystore Properties
 		Properties keystore_properties = IO.loadProperties(args[2]);
@@ -57,22 +59,21 @@ public class MainDispatcherServer {
 		// Read Endpoints
 		Properties service_endpoints = IO.loadProperties(args[3]);
 		
-		// TODO: read the loation of the other services
+		// TODO: read the location of the other services
 		
 		
 		// Create HTTPS Server
 		RemoteFileService dispatcher = new MainDispatcherImplementation();
 
-		// Passar o endereço 0.0.0.0 também?
-		HttpsServer server = HTTPS.buildServer(dispatcher, ks, keystore_password, ts, port, tls_version, authenticate_clients, ciphersuites, sr);
-		
+		SSLServerSocketFactory factory =  new CustomSSLServerSocketFactory(ks, keystore_password, ts, ciphersuites, protocols, authenticate_clients, sr);
+		mySecureRestServer server = new mySecureRestServer(port, dispatcher, factory);
 		server.start();
-
+		
 		System.out.println("\n\t#######################################################"
-				         + "\n\t      MainDispatcher ready @ " + "https:/" + server.getAddress() 
-				         + "\n\t                TLS Version: " + tls_version
-				         + "\n\t               Chipersuites: " + ciphersuites
-				         + "\n\t               SecureRandom: " + "null"
+				         + "\n\t      MainDispatcher ready @ " + server.getAddress()
+				         + "\n\t                TLS Version: " + protocols[0]
+				         + "\n\t               Chipersuites: " + ciphersuites[0]
+				         + "\n\t               SecureRandom: " + secure_random
 				         + "\n\t      Client Authentication: " + authenticate_clients 
 			             + "\n\t#######################################################");
 
