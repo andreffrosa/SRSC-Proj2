@@ -74,13 +74,16 @@ public class ConsoleClient {
 				case "login":
 					String username = login(in, client);
 					if(username != null) {
-						current_path = username + "/";
+						current_path = "/" + username + "/";
 						logedIn = true;
 					}
 					break;
 				case "exit":
 					exit = true;
 					break;
+				default:
+					System.out.println("Unsupported operation!");
+					// TODO: Apresnetar lista de comandos disponiveis
 				}
 			} else {
 				switch(cmd) {
@@ -94,6 +97,9 @@ public class ConsoleClient {
 				case "exit":
 					exit = true;
 					break;
+				default:
+					System.out.println("Unsupported operation!");
+					// TODO: Apresnetar lista de comandos disponiveis
 				}
 			}
 
