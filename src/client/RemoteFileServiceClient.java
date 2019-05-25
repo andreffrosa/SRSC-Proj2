@@ -28,6 +28,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 	}
 
+	// TODO: Vale a pena ter isto aqui?
 	private <T> T processRequest(RequestHandler<T> requestHandler) {
 
 		for (int current_try = 0; current_try < MAX_TRIES; current_try++) {

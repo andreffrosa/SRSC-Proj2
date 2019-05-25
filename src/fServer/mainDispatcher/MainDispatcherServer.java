@@ -13,7 +13,6 @@ import test.myHelloWorld;
 import utility.IO;
 import utility.MyKeyStore;
 
-@SuppressWarnings("restriction")
 public class MainDispatcherServer {
 
 	public static void main(String[] args) throws Exception {
@@ -46,12 +45,6 @@ public class MainDispatcherServer {
 		String truststore_type = keystore_properties.getProperty("truststore-type");
 		
 		System.setProperty("java.net.preferIPv4Stack", "true"); // Aqui ou nas runconfigs?
-	
-		// Acho que já não é preciso isto
-		/*System.setProperty("javax.net.ssl.keyStore", server_keystore);
-		System.setProperty("javax.net.ssl.keyStorePassword", keystore_password);
-		System.setProperty("javax.net.ssl.trustStore", server_truststore);
-		System.setProperty("javax.net.ssl.trustStorePassword", truststore_password);*/
 		
 		KeyStore ks = MyKeyStore.loadKeyStore(keystore_path, keystore_password, keystore_type);
 		KeyStore ts = MyKeyStore.loadKeyStore(truststore_path, truststore_password, truststore_type);

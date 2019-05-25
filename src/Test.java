@@ -26,7 +26,7 @@ public class Test {
 
 		KeyStore ks = MyKeyStore.loadKeyStore(keystore_path, keystore_password, keystore_type);
 		KeyStore ts = MyKeyStore.loadKeyStore(truststore_path, truststore_password, truststore_type);
-
+		
 		String location = "https://localhost:8888/";
 		
 		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, location);
