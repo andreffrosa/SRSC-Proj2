@@ -1,6 +1,7 @@
 package client;
 
-import java.util.Scanner;
+import java.io.Console;
+
 
 public class Client {
 
@@ -14,37 +15,73 @@ public class Client {
 	private static final String REMOVE_FILE = "rm";
 	private static final String REMOVE_DIR = "rmdir";
 	private static final String FILE_METADATA = "file";
-	
-	
+
+
 	public static void main(String[] args) {
-		
+
+		//	Scanner in = new Scanner(System.in);
+		Console console = System.console();
+		if (console == null) {
+			System.out.println("Couldn't get Console instance");
+			System.exit(-1);
+		}
+
+
 		// Receive from args the location of the configuration files
-		
+		//TODO
+
+		//Request login data
+		if(!loginIn(console))
+			System.exit(-1);
+
 		// Process user commands
-		Scanner in = new Scanner(System.in);
-		
 		String cmd;
-		
+
 		boolean exit = false;
 		while(!exit) {
-			System.out.print("> ");
-			cmd = in.next();
-			
-			switch(cmd) {
-			case "login":
-				String username = in.next();
-				String password = in.next();
+			console.printf("> ");
+				cmd = console.readLine();
+				
+				
+				
+				switch(cmd) {
+					
+					case "exit":
+					exit = true;
 				break;
-			case "exit":
-				exit = true;
-				break;
-			}
-			
-			in.nextLine();
+				}
+
 		}
-		
+
 		System.out.println("Exiting...");
-		in.close();
+		//	in.close();
 	}
-	
+
+
+	private static boolean loginIn(Console console) {
+		//System.out.print("username: ");
+		//String username = in.nextLine();
+		//System.out.printf("password for %s : ", username);
+
+		console.printf("username: ");
+		String username = console.readLine();
+		char passwordArray[] = console.readPassword("Enter password for %s : ", username);
+		String password = new String(passwordArray);	
+
+
+
+		return true;
+
+		/*
+		if(requestLogin(username, password)){
+		 	get token somehow
+		 	System.out.println("Login Successful");
+			return true;
+		}
+
+		System.err.println("Authentication error!");
+		return fasle; 			 	
+		 */
+	}
+
 }
