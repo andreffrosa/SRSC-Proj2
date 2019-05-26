@@ -27,11 +27,23 @@ public class MyKeyStore {
 		this.password = password;
 		this.path = path;
 	}
+	
+	public KeyStore getKeystore() {
+		return keystore;
+	}
+
+	public String getPassword() {
+		return password;
+	}
 
 	public KeyStore.Entry getEntry(String alias) {
 		try {
 			KeyStore.PasswordProtection ks_pp = new KeyStore.PasswordProtection(password.toCharArray());
+			try {
 			return keystore.getEntry(alias, ks_pp);
+			} catch( java.lang.UnsupportedOperationException e1) {
+				return keystore.getEntry(alias, null);
+			}
 		} catch( KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException e ) {
 			return null;
 		}
