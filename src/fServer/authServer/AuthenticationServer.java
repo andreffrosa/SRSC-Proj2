@@ -1,17 +1,10 @@
 package fServer.authServer;
 
-import java.io.IOException;
-import java.math.BigInteger;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Properties;
 
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
-import utility.DiffieHellman;
-import utility.IO;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
 
@@ -39,7 +32,7 @@ public class AuthenticationServer {
 		KeyStore ts = ks_stores[1].getKeystore();
 		
 		// Create Service handler
-		DiffieHellman dh = buildDH(dh_config);
+		DiffieHellman dh = DiffieHellman.buildDH(dh_config);
 		Map<String,User> authentication_table = User.parseAuthenticationTable(auth_table);
 		TokenIssuer tokenIssuer = TokenIssuer.fromConfigFile(token_config);
 		AuthenticatorService auth = new AuthenticatorServiceImpl(dh, authentication_table, tokenIssuer);
@@ -57,28 +50,6 @@ public class AuthenticationServer {
 						 + "\n\t         Client Authentication: " + factory.clientAuthentication() 
 						 + "\n\t#######################################################");
 
-	}
-	
-	private static DiffieHellman buildDH(String dh_config_file) throws NoSuchAlgorithmException, IOException {
-		Properties properties = IO.loadProperties(dh_config_file);
-		
-		String g_value = properties.getProperty("G");
-		int g_radix = Integer.parseInt(properties.getProperty("G-RADIX"));
-		BigInteger g = new BigInteger(g_value, g_radix);
-		
-		String p_value = properties.getProperty("P");
-		int p_radix = Integer.parseInt(properties.getProperty("P-RADIX"));
-		BigInteger p = new BigInteger(p_value, p_radix);
-		
-		int secret_key_size = Integer.parseInt(properties.getProperty("SECRET-KEY-SIZE"));
-		
-		String secret_key_algorithm = properties.getProperty("SECRET-KEY-ALGORITHM");
-		String provider = properties.getProperty("PROVIDER");
-		
-		String secure_random_algorithm = properties.getProperty("SECURE-RANDOM");
-		SecureRandom sr = (secure_random_algorithm == null) ? SecureRandom.getInstance("sha1PRNG") : SecureRandom.getInstance(secure_random_algorithm);
-		
-		return new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, provider, sr);
 	}
 
 }

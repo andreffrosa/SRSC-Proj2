@@ -1,5 +1,6 @@
-package utility;
+package fServer.authServer;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -11,11 +12,14 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.Properties;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import utility.IO;
 
 public class DiffieHellman {
 
@@ -26,6 +30,7 @@ public class DiffieHellman {
 
 	private static final String DEFAULT_SECRET_KEY_ALGORITHM = "AES";
 	private static final int DEFAULT_SECRET_KEY_SIZE = 16;
+	private static final String DEFAULT_CIPHERSUITE = "AES/CBC/PKCS5Padding";
 
 
 	private DHParameterSpec dhParams;
@@ -33,19 +38,24 @@ public class DiffieHellman {
 	private String provider;
 	private String secret_key_algorithm;
 	private SecureRandom sr;
+	private String ciphersuite;
+	private boolean use_iv;
 
 	public DiffieHellman(BigInteger p, BigInteger g) throws NoSuchAlgorithmException, NoSuchProviderException {
 		this(p, g, DEFAULT_SECRET_KEY_SIZE, 
 				DEFAULT_SECRET_KEY_ALGORITHM, DEFAULT_PROVIDER, 
-				SecureRandom.getInstance(DEFAULT_SECURE_RANDOM, DEFAULT_PROVIDER));
+				SecureRandom.getInstance(DEFAULT_SECURE_RANDOM, DEFAULT_PROVIDER),
+				DEFAULT_CIPHERSUITE, true);
 	}
 	
-	public DiffieHellman(BigInteger p, BigInteger g, int secret_key_size, String secret_key_algorithm, String provider, SecureRandom sr) {
+	public DiffieHellman(BigInteger p, BigInteger g, int secret_key_size, String secret_key_algorithm, String provider, SecureRandom sr, String ciphersuite, boolean use_iv) {
 		this.dhParams = new DHParameterSpec(p, g);
 		this.provider = provider;
 		this.secret_key_size = secret_key_size;
 		this.secret_key_algorithm = secret_key_algorithm;
 		this.sr = sr;
+		this.ciphersuite = ciphersuite;
+		this.use_iv = use_iv;
 	}
 
 	public DHParameterSpec getParams() {
@@ -66,6 +76,14 @@ public class DiffieHellman {
 
 	public String getSecret_key_algorithm() {
 		return secret_key_algorithm;
+	}
+
+	public String getCiphersuite() {
+		return ciphersuite;
+	}
+
+	public boolean useIv() {
+		return use_iv;
 	}
 
 	public KeyFactory getKeyFactory() throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -93,6 +111,31 @@ public class DiffieHellman {
 		SecretKey ks = new SecretKeySpec(secret, 0, secret_key_size, secret_key_algorithm);
 
 		return ks;
+	}
+	
+	public static DiffieHellman buildDH(String dh_config_file) throws NoSuchAlgorithmException, IOException {
+		Properties properties = IO.loadProperties(dh_config_file);
+		
+		String g_value = properties.getProperty("G");
+		int g_radix = Integer.parseInt(properties.getProperty("G-RADIX"));
+		BigInteger g = new BigInteger(g_value, g_radix);
+		
+		String p_value = properties.getProperty("P");
+		int p_radix = Integer.parseInt(properties.getProperty("P-RADIX"));
+		BigInteger p = new BigInteger(p_value, p_radix);
+		
+		int secret_key_size = Integer.parseInt(properties.getProperty("SECRET-KEY-SIZE"));
+		
+		String secret_key_algorithm = properties.getProperty("SECRET-KEY-ALGORITHM");
+		String provider = properties.getProperty("PROVIDER");
+		
+		String secure_random_algorithm = properties.getProperty("SECURE-RANDOM");
+		SecureRandom sr = (secure_random_algorithm == null) ? SecureRandom.getInstance("sha1PRNG") : SecureRandom.getInstance(secure_random_algorithm);
+		
+		String ciphersuite = properties.getProperty("CIPHERSUITE");
+		boolean use_iv = Boolean.parseBoolean(properties.getProperty("USE-IV"));
+		
+		return new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, provider, sr, ciphersuite, use_iv);
 	}
 
 }

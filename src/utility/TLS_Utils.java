@@ -11,8 +11,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Properties;
 
-import javax.net.ssl.SSLServerSocketFactory;
-
 import ssl.CustomSSLServerSocketFactory;
 
 public class TLS_Utils {

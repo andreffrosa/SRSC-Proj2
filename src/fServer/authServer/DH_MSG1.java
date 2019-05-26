@@ -13,8 +13,9 @@ public class DH_MSG1 {
 	private String encryption_algorithm;
 	private String secure_random_algorithm;
 	private String provider;
+	private byte[] iv;
 
-	public DH_MSG1(long nonce, BigInteger p, BigInteger g, int secret_key_size, String public_value, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider) {
+	public DH_MSG1(long nonce, BigInteger p, BigInteger g, int secret_key_size, String public_value, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider, byte[] iv) {
 		this.nonce = nonce;
 		this.p = p;
 		this.g = g;
@@ -24,6 +25,11 @@ public class DH_MSG1 {
 		this.encryption_algorithm = encryption_algorithm;
 		this.secure_random_algorithm = secure_random_algorithm;
 		this.provider = provider;
+		this.iv = iv;
+	}
+
+	public byte[] getIv() {
+		return iv;
 	}
 
 	public long getNonce() {
