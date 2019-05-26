@@ -129,6 +129,7 @@ public class StorageImplementaion implements StorageService {
 	}
 
 	private Path buildPath(String username, String path) {
+		
 		//check if path is null
 		if(path == null) path = "";
 

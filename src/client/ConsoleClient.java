@@ -1,9 +1,8 @@
 package client;
 
-import java.io.Console;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.LinkOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -12,6 +11,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -21,8 +21,25 @@ import utility.MyKeyStore;
 
 public class ConsoleClient {
 
+	//security bs
+	private static final String TRUSTSTORE_TYPE = "truststore-type";
+	private static final String TRUSTSTORE_PASSWORD = "truststore-password";
+	private static final String TRUSTSTORE = "truststore";
+	private static final String KEYSTORE_TYPE = "keystore-type";
+	private static final String KEYSTORE_PASSWORD = "keystore-password";
+	private static final String KEYSTORE = "keystore";
+	private static final String CONFIGS_KEYSTORES_PATH = "./configs/client/keystores.conf";	
+	
+	//err
+	private static final String UNSUPPORTED_OPERATION = "Unsupported operation!";
+	private static final String EXIT_TO_LEAVE = "Or enter exit, to leave";
+	private static final String USAGE_LOGIN_USERNAME = "Usage: login <username>";
+	private static final String NOT_LOGIN_ERR = "Please login to have access to the system.";
+	
 	//Operations
+	private static final String LOGOUT = "logout";
 	private static final String LOGIN = "login";
+	private static final String CHANGE_DIR = "cd";
 	private static final String LIST_FILES = "ls";
 	private static final String NEW_DIRECTORY = "mkdir";
 	private static final String UPLOAD = "put";
@@ -31,24 +48,27 @@ public class ConsoleClient {
 	private static final String REMOVE_FILE = "rm";
 	private static final String REMOVE_DIR = "rmdir";
 	private static final String FILE_METADATA = "file";
-
-
+	private static final String EXIT = "exit";
+	private static final String LOCAL_STORAGE = "./Files";
+	
+	
+	static RemoteFileServiceClient client;
+	static String username;
+	
 	public static void main(String[] args) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException, KeyManagementException {
 
 		Scanner in = new Scanner(System.in);
 
-		// Receive from args the location of the configuration files
-		//TODO
+		//TODO: Receive from args the location of the configuration files
+		
 
-		Properties keystore_properties = IO.loadProperties("./configs/client/keystores.conf");
-
-		// TODO: Transformar em constantes
-		String keystore_path = keystore_properties.getProperty("keystore");
-		String keystore_password = keystore_properties.getProperty("keystore-password");
-		String keystore_type = keystore_properties.getProperty("keystore-type");
-		String truststore_path = keystore_properties.getProperty("truststore");
-		String truststore_password = keystore_properties.getProperty("truststore-password");
-		String truststore_type = keystore_properties.getProperty("truststore-type");
+		Properties keystore_properties = IO.loadProperties(CONFIGS_KEYSTORES_PATH);
+		String keystore_path = keystore_properties.getProperty(KEYSTORE);
+		String keystore_password = keystore_properties.getProperty(KEYSTORE_PASSWORD);
+		String keystore_type = keystore_properties.getProperty(KEYSTORE_TYPE);
+		String truststore_path = keystore_properties.getProperty(TRUSTSTORE);
+		String truststore_password = keystore_properties.getProperty(TRUSTSTORE_PASSWORD);
+		String truststore_type = keystore_properties.getProperty(TRUSTSTORE_TYPE);
 
 		System.setProperty("java.net.preferIPv4Stack", "true"); // Aqui ou nas runconfigs?
 
@@ -57,49 +77,76 @@ public class ConsoleClient {
 
 		String location = "https://localhost:8888/";
 
-		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, location);
-
+		client = new RemoteFileServiceClient(ks, keystore_password, ts, location);
+		
+		
 		String current_path = "";
 		boolean logedIn = false;
 
 		// Process user commands
 		String cmd;
 		boolean exit = false;
+		
 		while(!exit) {
 			System.out.print("$" + current_path + "> ");
-			cmd = in.next();
+			cmd = in.next().toLowerCase();
 
 			if(!logedIn) {
 				switch(cmd) {
-				case "login":
-					String username = login(in, client);
+				case LOGIN:
+					username = login(in, client);
 					if(username != null) {
-						current_path = "/" + username + "/";
+						current_path = "/";
 						logedIn = true;
 					}
 					break;
-				case "exit":
+				case EXIT:
 					exit = true;
 					break;
 				default:
-					System.out.println("Unsupported operation!");
-					// TODO: Apresnetar lista de comandos disponiveis
+					System.err.println(NOT_LOGIN_ERR);
+					System.out.println(USAGE_LOGIN_USERNAME);
+					System.out.println(EXIT_TO_LEAVE);
 				}
 			} else {
 				switch(cmd) {
-				case "logout":
-					// TODO: O que fazer?
-					logedIn = false;
-					break;
-				case "cd":
+				case CHANGE_DIR:
 					current_path = changeDir(in, current_path);
 					break;
-				case "exit":
+				case LIST_FILES:
+					listFiles(current_path, in);
+					break;
+				case NEW_DIRECTORY:
+					mkdir(current_path, in);
+					break;
+				case UPLOAD:
+					upload(current_path, in);
+					break;
+				case DOWNLOAD:
+					download(current_path, in);
+					break;
+				case COPY:
+					copy(current_path, in);
+					break;
+				case REMOVE_FILE:
+					rmFile(current_path, in);
+					break;
+				case REMOVE_DIR:
+					rmDir(current_path, in);
+					break;
+				case FILE_METADATA:
+					getFileData(current_path, in);
+					break;
+				case LOGOUT:
+					// TODO
+					logedIn = false;
+					break;	
+				case EXIT:
 					exit = true;
 					break;
 				default:
-					System.out.println("Unsupported operation!");
-					// TODO: Apresnetar lista de comandos disponiveis
+					System.out.println(UNSUPPORTED_OPERATION);
+					listCmds();
 				}
 			}
 
@@ -107,6 +154,84 @@ public class ConsoleClient {
 
 		System.out.println("Exiting...");
 		//	in.close();
+	}
+
+	private static void getFileData(String current_path, Scanner in) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void rmDir(String current_path, Scanner in) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void rmFile(String current_path, Scanner in) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void copy(String current_path, Scanner in) {
+		
+		String fileName = in.next();
+		String dest = in.nextLine();
+		client.copy(username, String.format("%s/%s", current_path, fileName), String.format("/%s/%s", username, dest));
+		
+	}
+
+	private static void download(String current_path, Scanner in) throws IOException {
+		String fileName = in.nextLine();
+		Path localFilePath = Paths.get(LOCAL_STORAGE, fileName);
+		byte[] data = client.download(username, String.format("%s/%s", current_path, fileName));
+		
+		if(data != null) 
+			Files.write(localFilePath, data);			
+		else
+			System.out.println("File not found");
+	}
+
+	private static void upload(String current_path, Scanner in) {
+		
+		String fileName = in.nextLine();
+		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
+		byte[] data = null;
+		try {
+			if(Files.exists(localFilePath) && Files.isReadable(localFilePath)) 
+				data = Files.readAllBytes(localFilePath);
+			client.upload(fileName, String.format("%s/%s", current_path, fileName) , data);
+		} catch (IOException e) {
+			System.out.println("Could Not Found File " + fileName);
+		}
+		
+	
+	}
+
+	private static void mkdir(String current_path, Scanner in) {
+		
+		String dirName =  String.format("%s/%s/", current_path, in.nextLine().trim());
+		if(!client.mkdir(username, dirName))
+			System.out.println("Impossible to create directory");
+		
+	}
+
+	private static void listFiles(String current_path, Scanner in) {
+			
+		List<String>  files = client.listFiles(username, current_path);
+		files.forEach(System.out::println);
+		
+	}
+
+	private static void listCmds() {
+		
+		System.out.println("Change directory: cd <path>");
+		System.out.println("List files: ls");
+		System.out.println("New Directory: mkdir <path>");
+		System.out.println("Upload file to path: put <file> <path>");
+		System.out.println("Download file: get <pathToFile>");
+		System.out.println("Copy file: cp <origin> <destination>");
+		System.out.println("Remove file: rm <pathToFile>");
+		System.out.println("Remove Directory: rmdir <path>");
+		System.out.println("Get metadata: file <pathToFile>");
 	}
 
 	private static String changeDir(Scanner in, String current_path) {
@@ -130,13 +255,13 @@ public class ConsoleClient {
 	}
 
 	private static String login(Scanner in, RemoteFileServiceClient client) {
+		
 		String username = in.nextLine().trim();
-
 		System.out.print(String.format("Enter password for %s : ", username));
 
 		String password = in.nextLine();
 
-		boolean anthenticated = client.login(username, password);
+		//boolean anthenticated = client.login(username, password);
 
 		/*
 		if(requestLogin(username, password)){

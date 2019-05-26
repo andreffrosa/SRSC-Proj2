@@ -10,6 +10,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
 
+import fServer.storageServer.StorageService;
 import fileService.RemoteFileService;
 import rest.client.RestResponse;
 import rest.client.mySecureRestClient;
@@ -62,34 +63,69 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<String> listFiles(String username, String path) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return processRequest((location) -> {
+			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("ls").addPathParam(username).addPathParam(path).get();
+
+			if (response.getStatusCode() == 200) {
+				return (List<String>) response.getEntity(List.class);
+			} else
+				throw new RuntimeException("ls: " + response.getStatusCode());
+		});
 	}
 
 	@Override
 	public boolean mkdir(String username, String path) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		return processRequest((location) -> {
+			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("mkdir").addPathParam(username).addPathParam(path).post(null);
+
+			if (response.getStatusCode() == 200) {
+				return (boolean) response.getEntity(boolean.class);
+			} else
+				throw new RuntimeException("ls: " + response.getStatusCode());
+		});
 	}
 
 	@Override
 	public boolean upload(String username, String path, byte[] data) {
-		// TODO Auto-generated method stub
-		return false;
+		return processRequest((location) -> {
+			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("put").addPathParam(username).addPathParam(path).post(data);
+
+			if (response.getStatusCode() == 200) {
+				return (boolean) response.getEntity(boolean.class);
+			} else
+				throw new RuntimeException("put: " + response.getStatusCode());
+		});
 	}
+	
 
 	@Override
 	public byte[] download(String username, String path) {
-		// TODO Auto-generated method stub
-		return null;
+		return processRequest((location) -> {
+			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("get").addPathParam(username).addPathParam(path).get();
+
+			if (response.getStatusCode() == 200) {
+				return (byte[]) response.getEntity(byte[].class);
+			} else
+				throw new RuntimeException("get: " + response.getStatusCode());
+		});
 	}
+	
 
 	@Override
 	public boolean copy(String username, String origin, String dest) {
-		// TODO Auto-generated method stub
-		return false;
+		return processRequest((location) -> {
+			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("copy").addPathParam(username).addPathParam(origin).addPathParam(dest).post(null);
+
+			if (response.getStatusCode() == 200) {
+				return (boolean) response.getEntity(boolean.class);
+			} else
+				throw new RuntimeException("get: " + response.getStatusCode());
+		});
 	}
 
 	@Override
