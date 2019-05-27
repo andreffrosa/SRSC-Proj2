@@ -3,6 +3,7 @@
  */
 package fileService;
 
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -129,5 +130,5 @@ public interface RemoteFileService {
 	@GET
 	@Path("/file/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean getFileMetadata(@PathParam("username") String username, @PathParam("path") String path);
+	public BasicFileAttributes getFileMetadata(@PathParam("username") String username, @PathParam("path") String path);
 }

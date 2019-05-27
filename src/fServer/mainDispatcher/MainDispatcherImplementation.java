@@ -3,6 +3,7 @@ package fServer.mainDispatcher;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
@@ -110,9 +111,9 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	}
 
 	@Override
-	public boolean getFileMetadata(String username, String path) {
+	public BasicFileAttributes getFileMetadata(String username, String path) {
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -101,7 +102,7 @@ public class ConsoleClient {
 					current_path = changeDir(in, current_path);
 					break;
 				case LIST_FILES:
-					listFiles(current_path, in);
+					listFiles(current_path);
 					break;
 				case NEW_DIRECTORY:
 					mkdir(current_path, in);
@@ -146,17 +147,25 @@ public class ConsoleClient {
 	}
 
 	private static void getFileData(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
+		String fileName = in.nextLine();
+		BasicFileAttributes bfa = client.getFileMetadata(username, String.format("%s/%s", current_path, fileName));
+		if(bfa != null) {
+			System.out.println(bfa.toString()); //check if this is good
+		}
 
 	}
 
 	private static void rmDir(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
-
+		String dirName = in.nextLine();
+		if(!client.removeDirectory(username, String.format("%s/%s", current_path, dirName)))
+			System.out.println("Error Deliting file: " + dirName);
+		
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
+		String fileNameString = in.nextLine();
+		if(!client.remove(username, String.format("%s/%s", current_path, fileNameString)))
+			System.out.println("Error Deliting file: " + fileNameString);
 
 	}
 
@@ -187,7 +196,7 @@ public class ConsoleClient {
 		try {
 			if (Files.exists(localFilePath) && Files.isReadable(localFilePath))
 				data = Files.readAllBytes(localFilePath);
-			client.upload(fileName, String.format("%s/%s", current_path, fileName), data);
+			client.upload(username, String.format("%s/%s", current_path, fileName), data);
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + fileName);
 		}
@@ -195,14 +204,14 @@ public class ConsoleClient {
 	}
 
 	private static void mkdir(String current_path, Scanner in) {
-
+		
 		String dirName = String.format("%s/%s/", current_path, in.nextLine().trim());
 		if (!client.mkdir(username, dirName))
 			System.out.println("Impossible to create directory");
 
 	}
 
-	private static void listFiles(String current_path, Scanner in) {
+	private static void listFiles(String current_path) {
 
 		List<String> files = client.listFiles(username, current_path);
 		files.forEach(System.out::println);
