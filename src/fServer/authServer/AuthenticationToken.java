@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,18 +19,24 @@ import utility.Cryptography;
 
 public class AuthenticationToken {
 
+	private String encodeToken;
 	private String username;
 	private long expiration_date;
 	private byte[] signature;
 	private byte[] payload;
 	Map<String,String> additional_attributes;
 
-	private AuthenticationToken(String username, long expiration_date, byte[] payload, byte[] signature, Map<String, String> additional_attributes) {
+	private AuthenticationToken(String username, long expiration_date, byte[] payload, byte[] signature, Map<String, String> additional_attributes) throws IOException {
 		this.username = username;
 		this.expiration_date = expiration_date;
 		this.payload = payload;
 		this.signature = signature;
 		this.additional_attributes = additional_attributes;
+		encodeToken = encodeToBase64( );
+	}
+
+	private String encodeToBase64() throws IOException {
+		return Base64.getEncoder().encodeToString(serialize());
 	}
 
 	public String getUsername() {
@@ -46,6 +53,10 @@ public class AuthenticationToken {
 
 	public byte[] getPayload() {
 		return payload;
+	}
+	
+	public String getBase64() {
+		return encodeToken;
 	}
 
 	public Map<String, String> getAdditional_attributes() {
