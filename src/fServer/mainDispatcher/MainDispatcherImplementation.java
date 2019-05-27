@@ -16,12 +16,14 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
+import java.util.Map;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.net.SocketFactory;
+import javax.ws.rs.core.Context;
 
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticatorService;
@@ -69,9 +71,12 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	// tokenVerifier.validateToken(System.currentTimeMillis(), token) -> validar um token
 	
 	@Override
-	public List<String> listFiles(String username, String path) {
-		// TODO Auto-generated method stub
+	public List<String> listFiles(@Context Map<String, String> headers ,String username, String path) {
+		
+		System.out.println(headers.get("Authorization"));
+		
 		return null;
+				
 	}
 
 	@Override

@@ -23,7 +23,7 @@ import utility.ArrayUtil;
 import utility.IO;
 import utility.RequestHandler;
 
-public class RemoteFileServiceClient implements RemoteFileService {
+public class RemoteFileServiceClient{
 
 	private static final int MAX_TRIES = 3;
 	private String location;
@@ -60,7 +60,6 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		throw new RuntimeException("Aborted request! Too many tries...");
 	}
 
-	@Override
 	public boolean login(String username, String password) {
 
 		/*return processRequest((location) -> {
@@ -96,11 +95,10 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Override
 	public List<String> listFiles(String username, String path) {
 
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("ls").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("ls").addPathParam(username).addPathParam(path).get();
 
 			if (response.getStatusCode() == 200) {
 				return (List<String>) response.getEntity(List.class);
@@ -109,11 +107,10 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
-	@Override
 	public boolean mkdir(String username, String path) {
 
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("mkdir").addPathParam(username).addPathParam(path).post(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("mkdir").addPathParam(username).addPathParam(path).post(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -122,10 +119,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
-	@Override
 	public boolean upload(String username, String path, byte[] data) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("put").addPathParam(username).addPathParam(path).post(data);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("put").addPathParam(username).addPathParam(path).post(data);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -135,10 +131,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	}
 
 
-	@Override
 	public byte[] download(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("get").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("get").addPathParam(username).addPathParam(path).get();
 
 			if (response.getStatusCode() == 200) {
 				return (byte[]) response.getEntity(byte[].class);
@@ -148,10 +143,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	}
 
 
-	@Override
 	public boolean copy(String username, String origin, String dest) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("copy").addPathParam(username).addPathParam(origin).addPathParam(dest).post(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("copy").addPathParam(username).addPathParam(origin).addPathParam(dest).post(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -160,10 +154,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
-	@Override
 	public boolean remove(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rm").addPathParam(username).addPathParam(path).delete(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rm").addPathParam(username).addPathParam(path).delete(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -172,10 +165,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
-	@Override
 	public boolean removeDirectory(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rmDir").addPathParam(username).addPathParam(path).delete(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rmDir").addPathParam(username).addPathParam(path).delete(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -184,10 +176,9 @@ public class RemoteFileServiceClient implements RemoteFileService {
 		});
 	}
 
-	@Override
 	public BasicFileAttributes getFileMetadata(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("file").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("file").addPathParam(username).addPathParam(path).get();
 
 			if (response.getStatusCode() == 200) {
 				return (BasicFileAttributes) response.getEntity(BasicFileAttributes.class);
