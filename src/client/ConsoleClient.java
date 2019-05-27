@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -146,7 +147,11 @@ public class ConsoleClient {
 	}
 
 	private static void getFileData(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
+		String fileName = in.nextLine();
+		BasicFileAttributes bfa = client.getFileMetadata(username, String.format("%s/%s", current_path, fileName));
+		if(bfa != null) {
+			System.out.println(bfa.toString()); //check if this is good
+		}
 
 	}
 
