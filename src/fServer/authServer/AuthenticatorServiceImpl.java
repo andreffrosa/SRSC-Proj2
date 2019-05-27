@@ -66,9 +66,6 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		}).start();
 
 	}
-
-	// Gerar dinâmicamente
-	private static byte[] iv = new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15};
 	
 	// TODO: O que fazer com as excepções? Lançar throw?
 
@@ -88,8 +85,8 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 				// TODO: Enviar um IV dinâmico como arg
 				SessionEstablishmentParameters msg1 = new SessionEstablishmentParameters(nonce, dhParams.getP(), dhParams.getG(), dh.getSecret_key_size(), 
 						Cryptography.encodePublicKey(kp.getPublic()), 
-						dh.getSecret_key_algorithm(), dh.getCiphersuite(), 
-						dh.getSecureRandom().getAlgorithm(), dh.getProvider(), iv);
+						dh.getSecret_key_algorithm(), tokenIssuer.getCiphersuite(), 
+						dh.getSecureRandom().getAlgorithm(), dh.getProvider());
 
 				return new RestResponse("1.0", 200, "OK", msg1);
 			} else {
@@ -111,10 +108,8 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			PublicKey cliet_pub_key = Cryptography.parsePublicKey(user_public_value, dh.getKeyFactory());
 
 			SecretKey ks = dh.establishSecretKey(request.getKey_pair().getPrivate(), cliet_pub_key);
-
-			// TODO: Passar estas definições para um ficheiro e enviar para o cliente na 1ª msg para ele saber como cifrar as coisas
 			
-			Cipher cipher = Cryptography.buildCipher(dh.getCiphersuite(), Cipher.DECRYPT_MODE, ks, iv);
+			Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.DECRYPT_MODE, ks, tokenIssuer.getIv());
 
 			Entry<byte[], Long> e = parseMessage3(credentials, cipher);
 
@@ -128,7 +123,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 
 					AuthenticationToken token = tokenIssuer.newToken(user);
 
-					cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(iv));
+					cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(tokenIssuer.getIv()));
 
 					byte[] msg2 = wrapToken(token, client_nonce + 1, cipher);
 					

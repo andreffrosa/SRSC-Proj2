@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
+import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
@@ -59,8 +60,10 @@ public class ConsoleClient {
 
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
+		byte[] iv = ArrayUtil.unparse(IO.loadProperties(login_configs).getProperty("IV"));
+		
 		client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
-				kstores[1].getKeystore(), location);
+				kstores[1].getKeystore(), location, iv);
 
 		Scanner in = new Scanner(System.in);
 

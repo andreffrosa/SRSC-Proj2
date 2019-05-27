@@ -16,6 +16,7 @@ import java.util.AbstractMap;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;
 
@@ -24,11 +25,23 @@ public class TokenIssuer {
 	private long token_ttl;
 	private KeyPair kp;
 	private Signature sig;
+	private String ciphersuite;
+	private byte[] iv;
 	
-	public TokenIssuer(long token_ttl, KeyPair kp, Signature sig) {
+	public TokenIssuer(long token_ttl, KeyPair kp, Signature sig, String ciphersuite, byte[] iv) {
 		this.token_ttl = token_ttl;
 		this.kp = kp;
 		this.sig = sig;
+		this.ciphersuite = ciphersuite;
+		this.iv = iv;
+	}
+
+	public String getCiphersuite() {
+		return ciphersuite;
+	}
+
+	public byte[] getIv() {
+		return iv;
 	}
 
 	public long getToken_ttl() {
@@ -61,6 +74,9 @@ public class TokenIssuer {
 		String keystore_password = properties.getProperty("KEYSTORE-PASSWORD");
 		String certificate_alias  = properties.getProperty("CERTIFICATE-ALIAS");
 		
+		String ciphersuite = properties.getProperty("CIPHERSUITE");
+		byte[] iv = ArrayUtil.unparse(properties.getProperty("USE-IV"));
+		
 		MyKeyStore ks = new MyKeyStore(keystore_location, keystore_password, keystore_type);
 		KeyStore.PrivateKeyEntry e = (PrivateKeyEntry) ks.getEntry(certificate_alias);
 		
@@ -68,7 +84,7 @@ public class TokenIssuer {
 		
 		Signature sig = signature_algorithm_provider == null ? Signature.getInstance(signature_algorithm) : Signature.getInstance(signature_algorithm, signature_algorithm_provider);
 		
-		return new TokenIssuer(token_ttl, kp, sig);
+		return new TokenIssuer(token_ttl, kp, sig, ciphersuite, iv);
 	}
 	
 }

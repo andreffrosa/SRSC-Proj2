@@ -38,24 +38,19 @@ public class DiffieHellman {
 	private String provider;
 	private String secret_key_algorithm;
 	private SecureRandom sr;
-	private String ciphersuite;
-	private boolean use_iv;
 
 	public DiffieHellman(BigInteger p, BigInteger g) throws NoSuchAlgorithmException, NoSuchProviderException {
 		this(p, g, DEFAULT_SECRET_KEY_SIZE, 
 				DEFAULT_SECRET_KEY_ALGORITHM, DEFAULT_PROVIDER, 
-				SecureRandom.getInstance(DEFAULT_SECURE_RANDOM, DEFAULT_PROVIDER),
-				DEFAULT_CIPHERSUITE, true);
+				SecureRandom.getInstance(DEFAULT_SECURE_RANDOM, DEFAULT_PROVIDER));
 	}
 	
-	public DiffieHellman(BigInteger p, BigInteger g, int secret_key_size, String secret_key_algorithm, String provider, SecureRandom sr, String ciphersuite, boolean use_iv) {
+	public DiffieHellman(BigInteger p, BigInteger g, int secret_key_size, String secret_key_algorithm, String provider, SecureRandom sr) {
 		this.dhParams = new DHParameterSpec(p, g);
 		this.provider = provider;
 		this.secret_key_size = secret_key_size;
 		this.secret_key_algorithm = secret_key_algorithm;
 		this.sr = sr;
-		this.ciphersuite = ciphersuite;
-		this.use_iv = use_iv;
 	}
 
 	public DHParameterSpec getParams() {
@@ -76,14 +71,6 @@ public class DiffieHellman {
 
 	public String getSecret_key_algorithm() {
 		return secret_key_algorithm;
-	}
-
-	public String getCiphersuite() {
-		return ciphersuite;
-	}
-
-	public boolean useIv() {
-		return use_iv;
 	}
 
 	public KeyFactory getKeyFactory() throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -132,10 +119,7 @@ public class DiffieHellman {
 		String secure_random_algorithm = properties.getProperty("SECURE-RANDOM");
 		SecureRandom sr = (secure_random_algorithm == null) ? SecureRandom.getInstance("sha1PRNG") : SecureRandom.getInstance(secure_random_algorithm);
 		
-		String ciphersuite = properties.getProperty("CIPHERSUITE");
-		boolean use_iv = Boolean.parseBoolean(properties.getProperty("USE-IV"));
-		
-		return new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, provider, sr, ciphersuite, use_iv);
+		return new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, provider, sr);
 	}
 
 }

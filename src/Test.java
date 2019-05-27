@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import client.RemoteFileServiceClient;
 import fileService.RemoteFileService;
+import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;
 
@@ -29,7 +30,9 @@ public class Test {
 		
 		String location = "https://localhost:8888/";
 		
-		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, location);
+		byte[] iv = ArrayUtil.unparse(IO.loadProperties("./configs/client/login.conf").getProperty("IV"));
+		
+		RemoteFileServiceClient client = new RemoteFileServiceClient(ks, keystore_password, ts, location, iv);
 		
 		client.login("fifo", "xé");
 	}

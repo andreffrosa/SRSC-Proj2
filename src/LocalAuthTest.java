@@ -43,7 +43,9 @@ import fileService.RemoteFileService;
 import rest.client.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
+import utility.ArrayUtil;
 import utility.Cryptography;
+import utility.IO;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
 
@@ -78,7 +80,9 @@ public class LocalAuthTest {
 		SocketFactory factory = new CustomSSLSocketFactory(kstore, ks_password, ts);
 		mySecureRestClient client = new mySecureRestClient(factory, location);
 		
-		AuthenticationToken token = AuthenticationClient.login(client, AuthenticatorService.PATH, username, password, hash);
+		byte[] iv = ArrayUtil.unparse(IO.loadProperties("./configs/client/iv.conf").getProperty("IV"));
+		
+		AuthenticationToken token = AuthenticationClient.login(client, AuthenticatorService.PATH, username, password, hash, iv);
 		
 		System.out.println(token);
 		System.out.println(java.util.Base64.getEncoder().encodeToString(token.getSignature()));

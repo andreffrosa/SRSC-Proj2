@@ -70,7 +70,7 @@ public class AuthenticationClient {
 			throw new RuntimeException("requestSession: " + response.getStatusCode());
 	}
 
-	public static AuthenticationToken login(mySecureRestClient client, String resource_path, String username, String password, MessageDigest hash)
+	public static AuthenticationToken login(mySecureRestClient client, String resource_path, String username, String password, MessageDigest hash, byte[] raw_iv)
 			throws UnsupportedEncodingException, UnknownHostException, IOException, NoSuchAlgorithmException,
 			NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, ShortBufferException,
 			IllegalBlockSizeException, BadPaddingException, ExpiredTokenException, WrongChallengeAnswerException,
@@ -83,8 +83,7 @@ public class AuthenticationClient {
 		SecureRandom sr = SecureRandom.getInstance(msg1.getSecure_random_algorithm());
 
 		DiffieHellman dh_local = new DiffieHellman(msg1.getP(), msg1.getG(), msg1.getSecret_key_size(),
-				msg1.getSecret_key_algorithm(), msg1.getProvider(), sr, msg1.getEncryption_algorithm(),
-				msg1.getIv() != null);
+				msg1.getSecret_key_algorithm(), msg1.getProvider(), sr);
 
 		KeyPair myKeyPair = dh_local.genKeyPair();
 		PublicKey server_pub_key = Cryptography.parsePublicKey(msg1.getPublic_value(), dh_local.getKeyFactory());
@@ -93,7 +92,7 @@ public class AuthenticationClient {
 		// Transform the password
 		byte[] p_hash = Cryptography.digest(hash, password.getBytes());
 
-		IvParameterSpec iv = new IvParameterSpec(msg1.getIv());
+		IvParameterSpec iv = new IvParameterSpec(raw_iv);
 		Cipher cipher = Cipher.getInstance(msg1.getEncryption_algorithm());
 		cipher.init(Cipher.ENCRYPT_MODE, ks, iv);
 
