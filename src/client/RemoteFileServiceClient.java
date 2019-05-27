@@ -15,7 +15,7 @@ import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
 import fServer.storageServer.StorageService;
 import fileService.RemoteFileService;
-import rest.client.RestResponse;
+import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.ArrayUtil;
@@ -99,7 +99,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	public List<String> listFiles(String username, String path) {
 
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(StorageService.PATH).addHTTPHeader("Authorization", authToken.getBase64()).addPathParam("ls").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(StorageService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("ls").addPathParam(username).addPathParam(path).get();
 
 			if (response.getStatusCode() == 200) {
 				return (List<String>) response.getEntity(List.class);

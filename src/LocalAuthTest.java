@@ -40,7 +40,7 @@ import fServer.authServer.DiffieHellman;
 import fServer.authServer.TokenIssuer;
 import fServer.authServer.TokenVerifier;
 import fileService.RemoteFileService;
-import rest.client.RestResponse;
+import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.ArrayUtil;
