@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +44,7 @@ public class StorageImplementaion implements StorageService {
 		Path dirPath = buildPath(username, path);
 		return new File(dirPath.toString()).mkdirs();
 	}
-	
+
 	//TODO: Create metadata
 	@Override
 	public boolean upload(String username, String path, byte[] data) {
@@ -105,32 +106,38 @@ public class StorageImplementaion implements StorageService {
 
 	@Override
 	public boolean removeDirectory(String username, String path) {
-		
+
 		if(listFiles(username, path).size() > 0)
 			return false;
-		
+
 		Path dirPath = buildPath(username, path);
 		try {
-			
+
 			Files.delete(dirPath);
 			return true;
-			
+
 		} catch (IOException e) {
 			return false;
 		}
-		
-		
-		
+
+
+
 	}
 
 	@Override
-	public boolean getFileMetadata(String username, String path) {
-		// TODO Auto-generated method stub
-		return false;
+	public BasicFileAttributes getFileMetadata(String username, String path) {
+
+		Path filePath = buildPath(username, path);
+		try {
+			if(Files.exists(filePath))
+				return Files.readAttributes(filePath, BasicFileAttributes.class);
+
+		}catch(IOException e){	}
+		return null;
 	}
 
 	private Path buildPath(String username, String path) {
-		
+
 		//check if path is null
 		if(path == null) path = "";
 

@@ -151,12 +151,16 @@ public class ConsoleClient {
 	}
 
 	private static void rmDir(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
-
+		String dirName = in.nextLine();
+		if(!client.removeDirectory(username, String.format("%s/%s", current_path, dirName)))
+			System.out.println("Error Deliting file: " + dirName);
+		
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
-		// TODO Auto-generated method stub
+		String fileNameString = in.nextLine();
+		if(!client.remove(username, String.format("%s/%s", current_path, fileNameString)))
+			System.out.println("Error Deliting file: " + fileNameString);
 
 	}
 
