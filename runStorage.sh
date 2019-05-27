@@ -3,10 +3,10 @@ JAVA=$JAVA_HOME/jre/bin/java
 
 CP="-cp target/classes/:target/dependency/*:../mySecureREST/target/classes/:../mySecureREST/target/classes/*"
 
-PORT="8888"
+PORT="9999"
 TLS="./configs/fServer/servertls.conf"
 KEYSTORE="./configs/fServer/mainDispatcher/keystores.conf"
 ENDPOINTS="./configs/fServer/service-endpoints.txt"
 TOKEN="./configs/fServer/token_verification.conf"
 
-$JAVA $CP fServer.mainDispatcher.MainDispatcherServer $PORT $TLS $KEYSTORE $ENDPOINTS $TOKEN $@
+$JAVA $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $ENDPOINTS $TOKEN $@
