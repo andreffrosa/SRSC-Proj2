@@ -15,7 +15,7 @@ import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
 import fServer.storageServer.StorageService;
 import fileService.RemoteFileService;
-import rest.client.RestResponse;
+import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.ArrayUtil;

@@ -27,7 +27,7 @@ import fServer.authServer.AuthenticatorService;
 import fServer.authServer.DeniedAccessException;
 import fServer.authServer.TokenVerifier;
 import fileService.RemoteFileService;
-import rest.client.RestResponse;
+import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 

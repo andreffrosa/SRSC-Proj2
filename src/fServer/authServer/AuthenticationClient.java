@@ -25,7 +25,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 
-import rest.client.RestResponse;
+import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import utility.Cryptography;
 

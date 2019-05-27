@@ -28,7 +28,7 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
-import rest.client.RestResponse;
+import rest.RestResponse;
 import utility.Cryptography;
 
 public class AuthenticatorServiceImpl implements AuthenticatorService {
