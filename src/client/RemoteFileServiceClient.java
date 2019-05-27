@@ -98,9 +98,15 @@ public class RemoteFileServiceClient{
 	public List<String> listFiles(String username, String path) {
 
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("ls").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("ls")
+					.addPathParam(username)
+					.addPathParam(path)
+					.get();
 
 			if (response.getStatusCode() == 200) {
+				System.out.println(new String( response.getHTTPReply().serialize()));
 				return (List<String>) response.getEntity(List.class);
 			} else
 				throw new RuntimeException("ls: " + response.getStatusCode());

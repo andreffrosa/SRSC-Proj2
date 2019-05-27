@@ -15,6 +15,7 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -74,8 +75,9 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	public List<String> listFiles(@Context Map<String, String> headers ,String username, String path) {
 		
 		System.out.println(headers.get("Authorization"));
-		
-		return null;
+		List<String> list = new ArrayList<>();
+		list.add("EHEHEHEH");
+		return new ArrayList<String>(1);
 				
 	}
 
