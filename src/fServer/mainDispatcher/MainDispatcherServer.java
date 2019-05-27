@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
+import fServer.authServer.TokenVerifier;
 import fileService.RemoteFileService;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
@@ -17,12 +18,14 @@ public class MainDispatcherServer {
 
 	public static void main(String[] args) throws Exception {
 
-		if (args.length < 3) {
-			System.err.println("Usage: MainDispatcher <port> <tls-configs> <keystore-configs> <service-endpoints>");
+		if (args.length < 5) {
+			System.err.println("Usage: MainDispatcher <port> <tls-configs> <keystore-configs> <service-endpoints> <token-verification>");
 			System.exit(-1);
 		}
 
 		int port = Integer.parseInt(args[0]);
+		
+		String token_verif = args[4];
 
 		// Read Configs
 		Properties tls_properties = IO.loadProperties(args[1]);
@@ -44,19 +47,19 @@ public class MainDispatcherServer {
 		String truststore_password = keystore_properties.getProperty("truststore-password");
 		String truststore_type = keystore_properties.getProperty("truststore-type");
 		
-		System.setProperty("java.net.preferIPv4Stack", "true"); // Aqui ou nas runconfigs?
-		
 		KeyStore ks = MyKeyStore.loadKeyStore(keystore_path, keystore_password, keystore_type);
 		KeyStore ts = MyKeyStore.loadKeyStore(truststore_path, truststore_password, truststore_type);
 		
 		// Read Endpoints
 		Properties service_endpoints = IO.loadProperties(args[3]);
+		String authentication_server = service_endpoints.getProperty("authentication-server");
+		String access_control_server = service_endpoints.getProperty("access-control-server");
+		String storage_server = service_endpoints.getProperty("storage-server");
 		
-		// TODO: read the location of the other services
-		
-		
+		TokenVerifier tokenVerifier = TokenVerifier.getVerifier(token_verif);
+
 		// Create HTTPS Server
-		RemoteFileService dispatcher = new MainDispatcherImplementation();
+		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, tokenVerifier, ks, keystore_password, ts);
 
 		SSLServerSocketFactory factory =  new CustomSSLServerSocketFactory(ks, keystore_password, ts, ciphersuites, protocols, authenticate_clients, sr);
 		mySecureRestServer server = new mySecureRestServer(port, dispatcher, factory);

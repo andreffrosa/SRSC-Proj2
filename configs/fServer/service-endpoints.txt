@@ -1,1 +1,5 @@
 
+
+authentication-server: https://localhost:8050/
+acess-control-server:
+storage-server:

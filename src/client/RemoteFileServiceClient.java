@@ -5,11 +5,14 @@ import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
 
+import fServer.authServer.AuthenticationClient;
+import fServer.authServer.AuthenticationToken;
 import fServer.storageServer.StorageService;
 import fileService.RemoteFileService;
 import rest.client.RestResponse;
@@ -22,11 +25,13 @@ public class RemoteFileServiceClient implements RemoteFileService {
 	private static final int MAX_TRIES = 3;
 	private String location;
 	private mySecureRestClient client;
+	private AuthenticationToken authToken;
 
 	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location)
 			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		this.location = location;
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
+		this.authToken = null;
 	}
 
 	// TODO: Vale a pena ter isto aqui?
@@ -39,7 +44,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 				e.printStackTrace();
 				//if (e.getMessage().contains("java.net.ConnectException")
 				//		|| e.getMessage().contains("java.net.SocketTimeoutException")) {
-					System.out.println(String.format("Error contacting server %s .... retry: %d", location, current_try));
+				System.out.println(String.format("Error contacting server %s .... retry: %d", location, current_try));
 				/*} else {
 					e.printStackTrace();
 					throw new RuntimeException(e.getMessage());
@@ -52,21 +57,43 @@ public class RemoteFileServiceClient implements RemoteFileService {
 
 	@Override
 	public boolean login(String username, String password) {
-		
-		return processRequest((location) -> {
+
+		/*return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH).addPathParam("login").addPathParam(username).post(password);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
 			} else
 				throw new RuntimeException("login: " + response.getStatusCode());
-		});
+		});*/
+
+		// TODO: O que fazer às excepções?
+		try {
+			MessageDigest	hash = MessageDigest.getInstance("SHA512", "BC"); // TODO: ler do ficheiro de configs
+			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, hash);
+
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	// TODO: Colocar na interface?
+	public boolean logout() {
+		if(this.authToken!=null) {
+			this.authToken = null;
+			return true;
+		} 
+
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<String> listFiles(String username, String path) {
-		
+
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("ls").addPathParam(username).addPathParam(path).get();
 
@@ -79,7 +106,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 
 	@Override
 	public boolean mkdir(String username, String path) {
-		
+
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(StorageService.PATH).addPathParam("mkdir").addPathParam(username).addPathParam(path).post(null);
 
@@ -101,7 +128,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 				throw new RuntimeException("put: " + response.getStatusCode());
 		});
 	}
-	
+
 
 	@Override
 	public byte[] download(String username, String path) {
@@ -114,7 +141,7 @@ public class RemoteFileServiceClient implements RemoteFileService {
 				throw new RuntimeException("get: " + response.getStatusCode());
 		});
 	}
-	
+
 
 	@Override
 	public boolean copy(String username, String origin, String dest) {

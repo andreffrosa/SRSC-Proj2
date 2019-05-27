@@ -1,6 +1,8 @@
 package fServer.authServer;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -33,12 +35,12 @@ public interface AuthenticatorService {
 	@Path("/requestSession/{username}")
 	@Consumes(MediaType.APPLICATION_JSON + CHARSET)
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse requestSession(@PathParam("username") String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
+	public RestResponse requestSession(@PathParam("username") String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException;
 	
 	@POST
 	@Path("/requestToken/{username}/{user_public_value}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM + CHARSET)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM + CHARSET)
-	public RestResponse requestToken(@PathParam("username") String username, @PathParam("user_public_value") String user_public_value, @QueryParam("client_nonce") long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException;
+	public RestResponse requestToken(@PathParam("username") String username, @PathParam("user_public_value") String user_public_value, @QueryParam("client_nonce") long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException, DeniedAccessException;
 	
 }

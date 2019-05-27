@@ -27,6 +27,7 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.SocketFactory;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
@@ -34,9 +35,10 @@ import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
 import fServer.authServer.AuthenticatorService;
 import fServer.authServer.AuthenticatorServiceImpl;
-import fServer.authServer.DH_MSG1;
+import fServer.authServer.SessionEstablishmentParameters;
 import fServer.authServer.DiffieHellman;
 import fServer.authServer.TokenIssuer;
+import fServer.authServer.TokenVerifier;
 import fileService.RemoteFileService;
 import rest.client.RestResponse;
 import rest.client.mySecureRestClient;
@@ -72,20 +74,23 @@ public class LocalAuthTest {
 		String username = "bina";
 		String password = "larina";
 
-		AuthenticationClient client = new AuthenticationClient(kstore, ks_password, ts, location);
-
-		AuthenticationToken token = client.login(username, password, hash);
+		
+		SocketFactory factory = new CustomSSLSocketFactory(kstore, ks_password, ts);
+		mySecureRestClient client = new mySecureRestClient(factory, location);
+		
+		AuthenticationToken token = AuthenticationClient.login(client, AuthenticatorService.PATH, username, password, hash);
 		
 		System.out.println(token);
 		System.out.println(java.util.Base64.getEncoder().encodeToString(token.getSignature()));
-		Entry<PublicKey, Signature> e = TokenIssuer.getVerifier("./configs/fServer/token_verification.conf");
-		System.out.println(token.isValid(System.currentTimeMillis(), e.getValue(), e.getKey()));
+		TokenVerifier verifier = TokenVerifier.getVerifier("./configs/fServer/token_verification.conf");
+		System.out.println(verifier.validateToken(System.currentTimeMillis(), token));
+		/*System.out.println(token.isValid(System.currentTimeMillis(), e.getValue(), e.getKey()));
 		System.out.println(token.isAuthentic(e.getValue(), e.getKey()));
 		System.out.println(token.isExpired(System.currentTimeMillis()));
 		Thread.sleep(10000);
 		System.out.println(token.isValid(System.currentTimeMillis(), e.getValue(), e.getKey()));
 		System.out.println(token.isAuthentic(e.getValue(), e.getKey()));
-		System.out.println(token.isExpired(System.currentTimeMillis()));
+		System.out.println(token.isExpired(System.currentTimeMillis()));*/
 	}
 
 }

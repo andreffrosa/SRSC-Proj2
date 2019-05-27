@@ -71,25 +71,4 @@ public class TokenIssuer {
 		return new TokenIssuer(token_ttl, kp, sig);
 	}
 	
-	public static Entry<PublicKey, Signature> getVerifier(String config) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {
-		Properties properties = IO.loadProperties(config);
-		
-		String signature_algorithm = properties.getProperty("SIGNATURE-ALGORITHM");
-		String signature_algorithm_provider = properties.getProperty("SIGNATURE-ALGORITHM-PROVIDER");
-		
-		String truststore_location = properties.getProperty("TRUSTSTORE-PATH");
-		String truststore_type = properties.getProperty("TRUSTSTORE-TYPE");
-		String truststore_password = properties.getProperty("TRUSTSTORE-PASSWORD");
-		String certificate_alias  = properties.getProperty("CERTIFICATE-ALIAS");
-		
-		MyKeyStore ts = new MyKeyStore(truststore_location, truststore_password, truststore_type);
-		KeyStore.TrustedCertificateEntry e = (KeyStore.TrustedCertificateEntry) ts.getEntry(certificate_alias);
-		
-		PublicKey pubKey = e.getTrustedCertificate().getPublicKey();
-		
-		Signature sig = signature_algorithm_provider == null ? Signature.getInstance(signature_algorithm) : Signature.getInstance(signature_algorithm, signature_algorithm_provider);
-		
-		return new AbstractMap.SimpleEntry<PublicKey, Signature>(pubKey, sig);
-	}
-	
 }

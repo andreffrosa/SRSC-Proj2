@@ -7,110 +7,112 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
-import java.security.KeyManagementException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 
 import rest.client.RestResponse;
 import rest.client.mySecureRestClient;
-import ssl.CustomSSLSocketFactory;
 import utility.Cryptography;
 
 public class AuthenticationClient {
-
-	private mySecureRestClient client;
 	
-	public AuthenticationClient(KeyStore ks, String ks_password, KeyStore ts, String location)
-			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
-
-		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
+	public static RestResponse get_requestSession(mySecureRestClient client, String resource_path, String username) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		return client.newRequest(resource_path).addPathParam("requestSession")
+				.addPathParam(username).get();
 	}
 	
-	// TODO: Mudar o nome da class do resultado
-	public DH_MSG1 requestSession(String username) throws UnsupportedEncodingException, UnknownHostException, IOException {
-		RestResponse response = client.newRequest(AuthenticatorService.PATH)
-									.addPathParam("requestSession")
-									.addPathParam(username).get();
+	public static SessionEstablishmentParameters requestSession(mySecureRestClient client, String resource_path, String username) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		
+		RestResponse response = get_requestSession(client, resource_path, username);
 
-		// TODO: fazer lançamento de excepções quando vem um erro
 		if (response.getStatusCode() == 200) {
-			return (DH_MSG1) response.getEntity(DH_MSG1.class);
+			return (SessionEstablishmentParameters) response.getEntity(SessionEstablishmentParameters.class);
+		} else if (response.getStatusCode() == 403) {
+			String message = (String) response.getEntity(String.class);
+			throw new DeniedAccessException(message);
 		} else
 			throw new RuntimeException("requestSession: " + response.getStatusCode());
 	}
-	
-	public byte[] requestToken(String username, String user_public_value, long client_nonce, byte[] credentials) throws Exception {
-		RestResponse response = client.newRequest(AuthenticatorService.PATH)
-				.addPathParam("requestToken")
-				.addPathParam(username)
-				.addPathParam(user_public_value)
-				.addQueryParam("client_nonce", "" + client_nonce)
-				.post(credentials);
 
-		// TODO: lançar excepções
+	public static RestResponse post_requestToken(mySecureRestClient client, String resource_path, String username, String user_public_value, long client_nonce, byte[] credentials)
+			throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		return client.newRequest(resource_path).addPathParam("requestToken")
+				.addPathParam(username).addPathParam(user_public_value).addQueryParam("client_nonce", "" + client_nonce)
+				.post(credentials);
+	}
+	
+	public static byte[] requestToken(mySecureRestClient client, String resource_path, String username, String user_public_value, long client_nonce, byte[] credentials)
+			throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		
+		RestResponse response = post_requestToken(client, resource_path, username, user_public_value, client_nonce, credentials);
+
 		if (response.getStatusCode() == 200) {
 			return (byte[]) response.getEntity(byte[].class);
+		} else if (response.getStatusCode() == 403) {
+			String message = (String) response.getEntity(String.class);
+			throw new DeniedAccessException(message);
 		} else
 			throw new RuntimeException("requestSession: " + response.getStatusCode());
 	}
-	
-	public AuthenticationToken login(String username, String password, MessageDigest hash) throws Exception {
-		
-		DH_MSG1 msg1 = requestSession(username);
 
-		SecureRandom sr = SecureRandom.getInstance(msg1.getSecure_random_algorithm());
-		
-		// TODO: colocar uma seed diferente no sr?
-		
+	public static AuthenticationToken login(mySecureRestClient client, String resource_path, String username, String password, MessageDigest hash)
+			throws UnsupportedEncodingException, UnknownHostException, IOException, NoSuchAlgorithmException,
+			NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, ShortBufferException,
+			IllegalBlockSizeException, BadPaddingException, ExpiredTokenException, WrongChallengeAnswerException,
+			NoSuchPaddingException, DeniedAccessException, InvalidKeySpecException {
+
+		// Request a session
+		SessionEstablishmentParameters msg1 = requestSession(client, resource_path, username);
+
 		// Establish a shared key
-		DiffieHellman dh_local = new DiffieHellman(msg1.getP(), msg1.getG(), msg1.getSecret_key_size(), 
-							msg1.getSecret_key_algorithm(), msg1.getProvider(), 
-							sr, msg1.getEncryption_algorithm(), msg1.getIv()!=null);
+		SecureRandom sr = SecureRandom.getInstance(msg1.getSecure_random_algorithm());
+
+		DiffieHellman dh_local = new DiffieHellman(msg1.getP(), msg1.getG(), msg1.getSecret_key_size(),
+				msg1.getSecret_key_algorithm(), msg1.getProvider(), sr, msg1.getEncryption_algorithm(),
+				msg1.getIv() != null);
 
 		KeyPair myKeyPair = dh_local.genKeyPair();
 		PublicKey server_pub_key = Cryptography.parsePublicKey(msg1.getPublic_value(), dh_local.getKeyFactory());
 		SecretKey ks = dh_local.establishSecretKey(myKeyPair.getPrivate(), server_pub_key);
 
+		// Transform the password
 		byte[] p_hash = Cryptography.digest(hash, password.getBytes());
 
-		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-		DataOutputStream dataOut = new DataOutputStream(byteOut);
-
-		dataOut.writeInt(p_hash.length);
-		dataOut.write(p_hash);
-		dataOut.writeLong(msg1.getNonce()+1);
-
-		dataOut.flush();
-		byteOut.flush();
-
-		byte[] msg = byteOut.toByteArray();
-
 		IvParameterSpec iv = new IvParameterSpec(msg1.getIv());
-		
 		Cipher cipher = Cipher.getInstance(msg1.getEncryption_algorithm());
 		cipher.init(Cipher.ENCRYPT_MODE, ks, iv);
-		byte[] credentials = Cryptography.encrypt(cipher, msg);
 
-		dataOut.close();
-		byteOut.close();
+		byte[] credentials = buildCredentials(p_hash, msg1.getNonce() + 1, cipher);
 
-		String user_public_value = java.util.Base64.getEncoder().encodeToString(myKeyPair.getPublic().getEncoded());
+		String user_public_value = Cryptography.encodePublicKey(myKeyPair.getPublic());
 		long client_nonce = Cryptography.genNonce(sr);
 
-		byte[] msg2 = requestToken(username, user_public_value, client_nonce, credentials);
+		// Request the authentication token
+		byte[] msg2 = requestToken(client, resource_path, username, user_public_value, client_nonce, credentials);
 
+		// Decrypt message and retrieve the token
 		cipher.init(Cipher.DECRYPT_MODE, ks, iv);
+		return retrieveToken(msg2, client_nonce + 1, cipher);
+	}
+
+	private static AuthenticationToken retrieveToken(byte[] msg2, long client_challenge_answer, Cipher cipher)
+			throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException,
+			IOException, ExpiredTokenException, WrongChallengeAnswerException {
 		byte[] raw = Cryptography.decrypt(cipher, msg2);
 
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(raw);
@@ -124,16 +126,40 @@ public class AuthenticationClient {
 
 		dataIn.close();
 		byteIn.close();
-		
-		if(client_nonce+1 == challenge_answer) {
+
+		if (client_challenge_answer == challenge_answer) {
 			AuthenticationToken token = AuthenticationToken.parseToken(raw_token);
-			
-			if(!token.isExpired(System.currentTimeMillis()))
+
+			if (!token.isExpired(System.currentTimeMillis()))
 				return token;
 			else
-				return null; // TODO: lançar Excepção
+				throw new ExpiredTokenException();
 		} else {
-			return null; // TODO: lançar excepção
+			throw new WrongChallengeAnswerException();
 		}
+
+	}
+
+	private static byte[] buildCredentials(byte[] p_hash, long challenge_answer, Cipher cipher)
+			throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException,
+			InvalidAlgorithmParameterException, ShortBufferException {
+		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+		DataOutputStream dataOut = new DataOutputStream(byteOut);
+
+		dataOut.writeInt(p_hash.length);
+		dataOut.write(p_hash);
+		dataOut.writeLong(challenge_answer);
+
+		dataOut.flush();
+		byteOut.flush();
+
+		byte[] msg = byteOut.toByteArray();
+
+		byte[] credentials = Cryptography.encrypt(cipher, msg);
+
+		dataOut.close();
+		byteOut.close();
+
+		return credentials;
 	}
 }

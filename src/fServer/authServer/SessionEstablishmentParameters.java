@@ -2,7 +2,7 @@ package fServer.authServer;
 
 import java.math.BigInteger;
 
-public class DH_MSG1 {
+public class SessionEstablishmentParameters {
 
 	private long nonce;
 	private BigInteger p;
@@ -15,7 +15,7 @@ public class DH_MSG1 {
 	private String provider;
 	private byte[] iv;
 
-	public DH_MSG1(long nonce, BigInteger p, BigInteger g, int secret_key_size, String public_value, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider, byte[] iv) {
+	public SessionEstablishmentParameters(long nonce, BigInteger p, BigInteger g, int secret_key_size, String public_value, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider, byte[] iv) {
 		this.nonce = nonce;
 		this.p = p;
 		this.g = g;
