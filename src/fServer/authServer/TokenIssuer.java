@@ -75,7 +75,7 @@ public class TokenIssuer {
 		String certificate_alias  = properties.getProperty("CERTIFICATE-ALIAS");
 		
 		String ciphersuite = properties.getProperty("CIPHERSUITE");
-		byte[] iv = ArrayUtil.unparse(properties.getProperty("USE-IV"));
+		byte[] iv = ArrayUtil.unparse(properties.getProperty("IV"));
 		
 		MyKeyStore ks = new MyKeyStore(keystore_location, keystore_password, keystore_type);
 		KeyStore.PrivateKeyEntry e = (PrivateKeyEntry) ks.getEntry(certificate_alias);
