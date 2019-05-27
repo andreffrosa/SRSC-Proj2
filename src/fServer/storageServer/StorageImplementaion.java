@@ -43,7 +43,8 @@ public class StorageImplementaion implements StorageService {
 		Path dirPath = buildPath(username, path);
 		return new File(dirPath.toString()).mkdirs();
 	}
-
+	
+	//TODO: Create metadata
 	@Override
 	public boolean upload(String username, String path, byte[] data) {
 
