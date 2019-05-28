@@ -16,6 +16,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +25,16 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.net.SocketFactory;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.core.Context;
 
 import fServer.authServer.AuthenticationClient;
+import fServer.authServer.AuthenticationToken;
 import fServer.authServer.AuthenticatorService;
 import fServer.authServer.DeniedAccessException;
 import fServer.authServer.TokenVerifier;
+import fServer.storageServer.StorageService;
 import fileService.RemoteFileService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
@@ -43,6 +48,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	public MainDispatcherImplementation(String auth_server_location, String ac_server_location, String storage_server_location, TokenVerifier tokenVerifier, KeyStore ks, String ks_password, KeyStore ts) throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		SocketFactory factory = new CustomSSLSocketFactory(ks, ks_password, ts);
 		this.authClient = new mySecureRestClient(factory, auth_server_location);
+		this.tokenVerifier = tokenVerifier;
 	}
 
 	@Override
@@ -72,13 +78,41 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	// tokenVerifier.validateToken(System.currentTimeMillis(), token) -> validar um token
 	
 	@Override
-	public List<String> listFiles(@Context Map<String, String> headers ,String username, String path) {
+	public List<String> listFiles(String  token ,String username, String path) {
 		
-		System.out.println(headers.get("Authorization"));
-		List<String> list = new ArrayList<>();
-		list.add("EHEHEHEH");
+		try {
+			AuthenticationToken a = AuthenticationToken.parseToken(Base64.getDecoder().decode(token));
+			System.out.println(a.toString());
+			System.out.println( tokenVerifier.validateToken(System.currentTimeMillis(), a));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return new ArrayList<String>(1);
-				
+		
+		
+		/*
+		RestResponse response = client.newRequest(StorageService.PATH)
+				.addHeader("Authorization", authToken.getBase64())
+				.addPathParam("ls")
+				.addPathParam(username)
+				.addPathParam(path)
+				.get();
+
+		if (response.getStatusCode() == 200) {
+			System.out.println(new String( response.getHTTPReply().serialize()));
+			return (List<String>) response.getEntity(List.class);
+		} else
+			throw new RuntimeException("ls: " + response.getStatusCode());
+			*/	
 	}
 
 	@Override
