@@ -5,18 +5,17 @@ package fServer.mainDispatcher;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;	
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -52,7 +51,7 @@ public interface RemoteFileService {
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(/*@Context*/ Map<String, String>  headers, @PathParam("username") String username, @PathParam("path") String path);
+	public List<String> listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Creates a directory on the specified path.
