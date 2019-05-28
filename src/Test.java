@@ -3,7 +3,7 @@ import java.security.SecureRandom;
 import java.util.Properties;
 
 import client.RemoteFileServiceClient;
-import fileService.RemoteFileService;
+import fServer.mainDispatcher.RemoteFileService;
 import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;

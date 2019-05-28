@@ -14,8 +14,8 @@ import java.util.List;
 
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
+import fServer.mainDispatcher.RemoteFileService;
 import fServer.storageServer.StorageService;
-import fileService.RemoteFileService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;

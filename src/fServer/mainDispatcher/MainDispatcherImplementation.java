@@ -30,7 +30,6 @@ import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticatorService;
 import fServer.authServer.DeniedAccessException;
 import fServer.authServer.TokenVerifier;
-import fileService.RemoteFileService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
@@ -59,14 +58,6 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 			BadPaddingException, IOException, SignatureException, DeniedAccessException {
 		
 		return AuthenticationClient.post_requestToken(authClient, AuthenticatorService.PATH, username, user_public_value, client_nonce, credentials);
-	}
-	
-	// TODO: Esta função de login não é usa, o que fazer com ela?
-	@Override
-	public boolean login(String username, String password) {
-		// TODO Auto-generated method stub
-		System.out.println(username + ": " + password);
-		return false;
 	}
 
 	// tokenVerifier.validateToken(System.currentTimeMillis(), token) -> validar um token

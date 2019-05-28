@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fileService;
+package fServer.mainDispatcher;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -38,10 +38,10 @@ public interface RemoteFileService {
 	 * @param password user password
 	 * @return True if everything if correct (and a token on the authorization header), false if credentials are wrong.
 	 */
-	@POST
+	/*@POST
 	@Path("/login/{username}")
 	@Consumes(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean login(@PathParam("username") String username, String password);
+	public boolean login(@PathParam("username") String username, String password);*/
 	
 	/**
 	 *  List files or directories on the specified path
@@ -52,7 +52,7 @@ public interface RemoteFileService {
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(@Context Map<String, String>  headers, @PathParam("username") String username, @PathParam("path") String path);
+	public List<String> listFiles(/*@Context*/ Map<String, String>  headers, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Creates a directory on the specified path.

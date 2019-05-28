@@ -7,7 +7,6 @@ import java.util.Properties;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import fServer.authServer.TokenVerifier;
-import fileService.RemoteFileService;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
 import test.myHelloWorld;
