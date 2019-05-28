@@ -29,18 +29,19 @@ public class RemoteFileServiceClient{
 	private String location;
 	private mySecureRestClient client;
 	private AuthenticationToken authToken;
+	MessageDigest hash;
 	private byte[] iv;
 
-	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, byte[] iv)
+	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, byte[] iv, MessageDigest hash)
 			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		this.location = location;
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 		this.authToken = null;
 		this.iv = iv;
+		this.hash = hash;
 	}
 
-	// TODO: Vale a pena ter isto aqui?
-	private <T> T processRequest(RequestHandler<T> requestHandler) {
+	private <K, T> T processRequest(RequestHandler<String, T> requestHandler) {
 
 		for (int current_try = 0; current_try < MAX_TRIES; current_try++) {
 			try {
@@ -73,7 +74,6 @@ public class RemoteFileServiceClient{
 
 		// TODO: O que fazer às excepções?
 		try {
-			MessageDigest	hash = MessageDigest.getInstance("SHA512", "BC"); // TODO: ler do ficheiro de configs
 			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, hash, iv);
 
 			return true;

@@ -83,7 +83,6 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 
 				pending_requests.put(username, new SessionPendingRequest(nonce+1, kp, System.currentTimeMillis() + REQUEST_TTL));
 
-				// TODO: Enviar um IV dinâmico como arg
 				SessionEstablishmentParameters msg1 = new SessionEstablishmentParameters(nonce, dhParams.getP(), dhParams.getG(), dh.getSecret_key_size(), 
 						Cryptography.encodePublicKey(kp.getPublic()), 
 						dh.getSecret_key_algorithm(), tokenIssuer.getCiphersuite(), 

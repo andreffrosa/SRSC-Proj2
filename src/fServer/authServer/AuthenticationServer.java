@@ -11,6 +11,7 @@ import utility.TLS_Utils;
 public class AuthenticationServer {
 
 	public static void main(String[] args) throws Exception {
+		
 		if (args.length < 6) {
 			System.err.println("Usage: AuthenticationServer <port> <tls-configs> <keystore-configs> <authentication-table> <dh-config-file> <token-config>");
 			System.exit(-1);
@@ -23,8 +24,6 @@ public class AuthenticationServer {
 		String dh_config = args[4];
 		String token_config = args[5];
 		
-		System.setProperty("java.net.preferIPv4Stack", "true"); // Aqui ou nas runconfigs?
-
 		// Load KeyStores
 		MyKeyStore[] ks_stores = TLS_Utils.loadKeyStores(keystores_configs);
 		KeyStore ks = ks_stores[0].getKeystore();

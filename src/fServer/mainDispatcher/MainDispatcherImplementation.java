@@ -33,12 +33,13 @@ import fServer.authServer.TokenVerifier;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
+import utility.RequestHandler;
 
 public class MainDispatcherImplementation implements RemoteFileService, AuthenticatorService {
-	
+
 	private TokenVerifier tokenVerifier;
 	private mySecureRestClient authClient;
-	
+
 	public MainDispatcherImplementation(String auth_server_location, String ac_server_location, String storage_server_location, TokenVerifier tokenVerifier, KeyStore ks, String ks_password, KeyStore ts) throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		SocketFactory factory = new CustomSSLSocketFactory(ks, ks_password, ts);
 		this.authClient = new mySecureRestClient(factory, auth_server_location);
@@ -48,7 +49,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	@Override
 	public RestResponse requestSession(String username)
 			throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
-		
+
 		return AuthenticationClient.get_requestSession(authClient, AuthenticatorService.PATH, username);
 	}
 
@@ -57,48 +58,34 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
 			NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException,
 			BadPaddingException, IOException, SignatureException, DeniedAccessException {
-		
+
 		return AuthenticationClient.post_requestToken(authClient, AuthenticatorService.PATH, username, user_public_value, client_nonce, credentials);
 	}
 
-	// tokenVerifier.validateToken(System.currentTimeMillis(), token) -> validar um token
-	
-	@Override
-	public List<String> listFiles(String  token ,String username, String path) {
-		
-		try {
-			AuthenticationToken a = AuthenticationToken.parseToken(Base64.getDecoder().decode(token));
-			System.out.println(a.toString());
-			System.out.println( tokenVerifier.validateToken(System.currentTimeMillis(), a));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return new ArrayList<String>(1);
-		
-		
-		/*
-		RestResponse response = client.newRequest(StorageService.PATH)
-				.addHeader("Authorization", authToken.getBase64())
-				.addPathParam("ls")
-				.addPathParam(username)
-				.addPathParam(path)
-				.get();
+	private <K, T> RestResponse processRequest(String token, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
 
-		if (response.getStatusCode() == 200) {
-			System.out.println(new String( response.getHTTPReply().serialize()));
-			return (List<String>) response.getEntity(List.class);
-		} else
-			throw new RuntimeException("ls: " + response.getStatusCode());
-			*/	
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+
+		if(tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+
+			return requestHandler.execute(auth);
+		} else {
+			return new RestResponse("1.0", 403, "Forbidden", "token is expired!".getBytes());
+		}
+	}
+
+	// TODO: remover o username porque o token já o tem
+	@Override
+	public RestResponse listFiles(String token, String username, String path) throws Exception {
+		
+		return processRequest(token, (auth) -> {
+			List<String> list = new ArrayList<String>(1);
+			
+			// TODO:
+
+			return new RestResponse("1.0", 200, "OK", list);
+		} );
+
 	}
 
 	@Override

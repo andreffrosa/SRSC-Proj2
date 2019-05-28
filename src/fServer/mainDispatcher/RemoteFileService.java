@@ -18,6 +18,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import rest.RestResponse;
+
 /**
  * @author Ruben Silva & Andre Rosa
  *
@@ -47,11 +49,12 @@ public interface RemoteFileService {
 	 * @param username user username 
 	 * @param path path to list files
 	 * @return A list of names of the files and subdirectories on that path.
+	 * @throws Exception 
 	 */
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Creates a directory on the specified path.
