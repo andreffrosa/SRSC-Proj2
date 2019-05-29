@@ -53,6 +53,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 	}
 
 	private void startGarbageCollector() {
+		
 		new Thread(()-> {
 			while(true) {
 				try {
