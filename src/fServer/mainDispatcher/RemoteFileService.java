@@ -3,8 +3,6 @@
  */
 package fServer.mainDispatcher;
 
-import java.nio.file.attribute.BasicFileAttributes;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -60,11 +58,12 @@ public interface RemoteFileService {
 	 * @param username user username
 	 * @param path path to create directory
 	 * @return True if everything went correctly or false if the directory was not created.
+	 * @throws Exception 
 	 */
 	@POST
 	@Path("/mkdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean mkdir(@PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse mkdir(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Uploads a file to the specified directory.
@@ -72,23 +71,25 @@ public interface RemoteFileService {
 	 * @param path path where to upload file.
 	 * @param data file data as byte array.
 	 * @return True if everything went correctly or false if the file was not uploaded.
+	 * @throws Exception 
 	 */
 	@PUT
 	@Path("/put/{username}/{path}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean upload(@PathParam("username") String username, @PathParam("path") String path, byte[] data );
+	public RestResponse upload(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path, byte[] data ) throws Exception;
 	
 	/**
 	 * Downloads a file that resides in the specified directory
 	 * @param username user username
 	 * @param path file path
 	 * @return A byte array with the file data.
+	 * @throws Exception 
 	 */
 	@GET
 	@Path("/get/{username}/{path}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public byte[] download(@PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse download(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Copies a file from some path1 to some other path2.
@@ -96,42 +97,46 @@ public interface RemoteFileService {
 	 * @param origin path of the file.
 	 * @param dest path where to copy to.
 	 * @return True if everything went correctly or false if the file was not copied.
+	 * @throws Exception 
 	 */
 	@PUT
 	@Path("/cp/{username}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean copy(@PathParam("username") String username, @QueryParam("origin") String origin, @QueryParam("dest") String dest);
+	public RestResponse copy(@HeaderParam("Authorization") String token, @PathParam("username") String username, @QueryParam("origin") String origin, @QueryParam("dest") String dest) throws Exception;
 	
 	/**
 	 * Removes a file that resides on the specified path.
 	 * @param username user username
 	 * @param path path of the file.
 	 * @return True if everything went correctly or false if the file was not removed.
+	 * @throws Exception 
 	 */
 	@DELETE
 	@Path("/rm/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean remove(@PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse remove(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Removes a directory with the path provided.
 	 * @param username user username
 	 * @param path path of the directory
 	 * @return True if everything went correctly or false if the directory was not removed.
+	 * @throws Exception 
 	 */
 	@DELETE
 	@Path("/rmdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean removeDirectory(@PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse removeDirectory(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Retrieved a file metadata
 	 * @param username user username
 	 * @param path path of the file
 	 * @return An object with the info: isDirectory,type, name, creationDate, lastModification
+	 * @throws Exception 
 	 */
 	@GET
 	@Path("/file/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public BasicFileAttributes getFileMetadata(@PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse getFileMetadata(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 }

@@ -14,8 +14,8 @@ import fServer.authServer.TokenVerifier;
 public class AcessControllerImplementation implements AcessControler {
 
 	private static final String REGEX = " ";
-	private static final int READ = 0;
-	private static final int WRITE = 1;
+	private static final int READ_POS = 0;
+	private static final int WRITE_POS = 1;
 	
 	private Map<String, boolean[]> permissionsMap;
 	private TokenVerifier tokenVerifier;
@@ -44,35 +44,41 @@ public class AcessControllerImplementation implements AcessControler {
 				Arrays.fill(permissions, false);
 			else {
 				if(splitedPrivileges.length > 2) 
-					permissions[WRITE] = true;
+					permissions[WRITE_POS] = true;
 				else
-					permissions[WRITE] = false;
+					permissions[WRITE_POS] = false;
 			
-				permissions[READ] = true;
+				permissions[READ_POS] = true;
 			}
 			
 			permissionsMap.put(user, permissions);
 		}
-
-
 	}
-
-	@Override
-	public boolean canRead(String username) {
+		
+	private boolean canRead(String username) {
 		
 		if(permissionsMap.containsKey(username))
-			return permissionsMap.get(username)[READ];
+			return permissionsMap.get(username)[READ_POS];
+		
+		return false;
+	}
+
+	private boolean canWrite(String username) {
+		
+		if(permissionsMap.containsKey(username))
+			return permissionsMap.get(username)[WRITE_POS];
 		
 		return false;
 	}
 
 	@Override
-	public boolean canWrite(String username) {
+	public boolean hasAccess(String opeartion, String username) {
 		
-		if(permissionsMap.containsKey(username))
-			return permissionsMap.get(username)[WRITE];
+		if(opeartion.equals(AcessControler.WRITE_ACCESS_REQUEST))
+			return canWrite(username);
+		else
+			return canRead(username);
 		
-		return false;
 	}
 
 }
