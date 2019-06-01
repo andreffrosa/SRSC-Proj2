@@ -39,7 +39,7 @@ public class StorageServer {
 		server.start();
 
 		System.out.println("\n\t#######################################################"
-					     + "\n\t    AccessControlServer ready @ " + server.getAddress()
+					     + "\n\t    Storage Server ready @ " + server.getAddress()
 					     + "\n\t                   TLS Version: " + factory.getTLSVersions()[0]
 						 + "\n\t                  Chipersuites: " + factory.getDefaultCipherSuites()[0]
 						 + "\n\t                  SecureRandom: " + (factory.getSecureRandom() == null ? "null" : factory.getSecureRandom().getAlgorithm())
