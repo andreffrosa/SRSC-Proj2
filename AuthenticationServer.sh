@@ -11,5 +11,6 @@ KEYSTORE="./configs/fServer/authenticationServer/keystores.conf"
 AUTH_TABLE="./configs/fServer/authenticationServer/authentication_table.txt"
 DH="./configs/fServer/authenticationServer/dh.conf"
 TOKEN="./configs/fServer/authenticationServer/tokens.conf"
+LOGIN="./configs/fServer/authenticationServer/login.conf"
 
-$JAVA $JAVA_ARGS $CP fServer.authServer.AuthenticationServer $PORT $TLS $KEYSTORE $AUTH_TABLE $DH $TOKEN $@
+$JAVA $JAVA_ARGS $CP fServer.authServer.AuthenticationServer $PORT $TLS $KEYSTORE $AUTH_TABLE $DH $TOKEN $LOGIN $@

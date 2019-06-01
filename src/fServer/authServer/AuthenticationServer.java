@@ -5,6 +5,7 @@ import java.util.Map;
 
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
+import utility.LoginUtility;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
 
@@ -12,8 +13,8 @@ public class AuthenticationServer {
 
 	public static void main(String[] args) throws Exception {
 		
-		if (args.length < 6) {
-			System.err.println("Usage: AuthenticationServer <port> <tls-configs> <keystore-configs> <authentication-table> <dh-config-file> <token-config>");
+		if (args.length < 7) {
+			System.err.println("Usage: AuthenticationServer <port> <tls-configs> <keystore-configs> <authentication-table> <dh-config-file> <token-config> <login-config>");
 			System.exit(-1);
 		}
 
@@ -23,6 +24,7 @@ public class AuthenticationServer {
 		String auth_table = args[3];
 		String dh_config = args[4];
 		String token_config = args[5];
+		String login_config = args[6];
 		
 		// Load KeyStores
 		MyKeyStore[] ks_stores = TLS_Utils.loadKeyStores(keystores_configs);
@@ -34,7 +36,8 @@ public class AuthenticationServer {
 		DiffieHellman dh = DiffieHellman.buildDH(dh_config);
 		Map<String,User> authentication_table = User.parseAuthenticationTable(auth_table);
 		TokenIssuer tokenIssuer = TokenIssuer.fromConfigFile(token_config);
-		AuthenticatorService auth = new AuthenticatorServiceImpl(dh, authentication_table, tokenIssuer);
+		LoginUtility login_util = LoginUtility.fromConfig(login_config);
+		AuthenticatorService auth = new AuthenticatorServiceImpl(dh, authentication_table, tokenIssuer, login_util);
 
 		// Create HTTPS Server
 		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);

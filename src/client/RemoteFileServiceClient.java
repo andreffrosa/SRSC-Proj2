@@ -21,6 +21,7 @@ import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.ArrayUtil;
 import utility.IO;
+import utility.LoginUtility;
 import utility.RequestHandler;
 
 public class RemoteFileServiceClient{
@@ -29,16 +30,14 @@ public class RemoteFileServiceClient{
 	private String location;
 	private mySecureRestClient client;
 	private AuthenticationToken authToken;
-	MessageDigest hash;
-	private byte[] iv;
+	private LoginUtility login_util; 
 
-	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, byte[] iv, MessageDigest hash)
+	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, LoginUtility login_util)
 			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		this.location = location;
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 		this.authToken = null;
-		this.iv = iv;
-		this.hash = hash;
+		this.login_util = login_util;
 	}
 
 	private <K, T> T processRequest(RequestHandler<String, T> requestHandler) {
@@ -74,7 +73,7 @@ public class RemoteFileServiceClient{
 
 		// TODO: O que fazer às excepções?
 		try {
-			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, hash, iv);
+			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, login_util);
 
 			return true;
 		} catch(Exception e) {

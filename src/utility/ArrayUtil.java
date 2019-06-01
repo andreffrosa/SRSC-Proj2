@@ -36,4 +36,23 @@ public class ArrayUtil {
 
 		return result;
 	}
+	
+	public static byte[] longToBytes(long l) {
+	    byte[] result = new byte[Long.BYTES];
+	    for (int i = Long.BYTES-1; i >= 0; i--) {
+	        result[i] = (byte)(l & 0xFF);
+	        l >>= Long.BYTES;
+	    }
+	    return result;
+	}
+
+	public static long bytesToLong(byte[] b) {
+	    long result = 0;
+	    for (int i = 0; i < Long.BYTES; i++) {
+	        result <<= Long.BYTES;
+	        result |= (b[i] & 0xFF);
+	    }
+	    return result;
+	}
+	
 }

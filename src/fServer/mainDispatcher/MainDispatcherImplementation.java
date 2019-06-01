@@ -54,12 +54,12 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	}
 
 	@Override
-	public RestResponse requestToken(String username, String user_public_value, long client_nonce, byte[] credentials)
+	public RestResponse requestToken(String username, long client_nonce, byte[] credentials)
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
 			NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException,
 			BadPaddingException, IOException, SignatureException, DeniedAccessException {
 
-		return AuthenticationClient.post_requestToken(authClient, AuthenticatorService.PATH, username, user_public_value, client_nonce, credentials);
+		return AuthenticationClient.post_requestToken(authClient, AuthenticatorService.PATH, username, client_nonce, credentials);
 	}
 
 	private <K, T> RestResponse processRequest(String token, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {

@@ -8,18 +8,16 @@ public class SessionEstablishmentParameters {
 	private BigInteger p;
 	private BigInteger g;
 	private int secret_key_size;
-	private String public_value;
 	private String secret_key_algorithm;
 	private String encryption_algorithm;
 	private String secure_random_algorithm;
 	private String provider;
 
-	public SessionEstablishmentParameters(long nonce, BigInteger p, BigInteger g, int secret_key_size, String public_value, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider) {
+	public SessionEstablishmentParameters(long nonce, BigInteger p, BigInteger g, int secret_key_size, String secret_key_algorithm, String encryption_algorithm, String secure_random_algorithm, String provider) {
 		this.nonce = nonce;
 		this.p = p;
 		this.g = g;
 		this.secret_key_size = secret_key_size;
-		this.public_value = public_value;
 		this.secret_key_algorithm = secret_key_algorithm;
 		this.encryption_algorithm = encryption_algorithm;
 		this.secure_random_algorithm = secure_random_algorithm;
@@ -40,10 +38,6 @@ public class SessionEstablishmentParameters {
 
 	public int getSecret_key_size() {
 		return secret_key_size;
-	}
-
-	public String getPublic_value() {
-		return public_value;
 	}
 
 	public String getSecret_key_algorithm() {

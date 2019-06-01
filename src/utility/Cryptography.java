@@ -3,6 +3,7 @@ package utility;
 import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,8 +23,11 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
 
 public class Cryptography {
 
@@ -124,4 +128,19 @@ public class Cryptography {
         return signature.verify(sig);
 	}
 
+	public static Cipher[] genPBECiphers(String password, byte[] salt, int iterations, String algorithm, String provider) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException, InvalidKeySpecException, NoSuchPaddingException {
+     
+        PBEKeySpec          pbeSpec = new PBEKeySpec(password.toCharArray());
+        SecretKeyFactory    keyFact = SecretKeyFactory.getInstance(algorithm, provider);
+        Key sKey= keyFact.generateSecret(pbeSpec);
+
+        Cipher cEnc = Cipher.getInstance(algorithm,provider);
+        cEnc.init(Cipher.ENCRYPT_MODE, sKey, new PBEParameterSpec(salt, iterations));
+       
+        Cipher cDec = Cipher.getInstance(algorithm,provider);
+        cDec.init(Cipher.DECRYPT_MODE, sKey, new PBEParameterSpec(salt, iterations));
+        
+        return new Cipher[] {cEnc, cDec};
+	}
+	
 }

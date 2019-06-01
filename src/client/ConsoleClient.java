@@ -19,6 +19,7 @@ import java.util.Scanner;
 
 import utility.ArrayUtil;
 import utility.IO;
+import utility.LoginUtility;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
 
@@ -61,16 +62,10 @@ public class ConsoleClient {
 
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
-		
-		Properties login_properties = IO.loadProperties(login_configs);
-		byte[] iv = ArrayUtil.unparse(login_properties.getProperty("IV"));
-		String hash_algorithm = login_properties.getProperty("HASH-ALGORITHM");
-		String hash_algorithm_provider = login_properties.getProperty("HASH-ALGORITHM-PROVIDER");
-		
-		MessageDigest hash = MessageDigest.getInstance(hash_algorithm, hash_algorithm_provider);
+		LoginUtility login_util = LoginUtility.fromConfig(login_configs);
 		
 		client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
-				kstores[1].getKeystore(), location, iv, hash);
+				kstores[1].getKeystore(), location, login_util);
 
 		Scanner in = new Scanner(System.in);
 
