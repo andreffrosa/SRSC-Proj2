@@ -1,23 +1,17 @@
 package client;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.Scanner;
 
-import utility.ArrayUtil;
+import fServer.authServer.DeniedAccessException;
+import fServer.authServer.ExpiredTokenException;
+import fServer.authServer.WrongChallengeAnswerException;
 import utility.IO;
 import utility.LoginUtility;
 import utility.MyKeyStore;
@@ -256,16 +250,12 @@ public class ConsoleClient {
 
 		String password = in.nextLine();
 		
-		client.login(username, password);
-
-		// boolean anthenticated = client.login(username, password);
-
-		/*
-		 * if(requestLogin(username, password)){ get token somehow
-		 * System.out.println("Login Successful"); return true; }
-		 * 
-		 * System.err.println("Authentication error!"); return fasle;
-		 */
+		try {
+			client.login(username, password);
+		} catch (ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
+			System.out.println("\t" + e.getMessage());
+			return null;
+		}
 
 		return username;
 	}

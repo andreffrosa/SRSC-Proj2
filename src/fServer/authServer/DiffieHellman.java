@@ -30,7 +30,6 @@ public class DiffieHellman {
 
 	private static final String DEFAULT_SECRET_KEY_ALGORITHM = "AES";
 	private static final int DEFAULT_SECRET_KEY_SIZE = 16;
-	private static final String DEFAULT_CIPHERSUITE = "AES/CBC/PKCS5Padding";
 
 
 	private DHParameterSpec dhParams;
