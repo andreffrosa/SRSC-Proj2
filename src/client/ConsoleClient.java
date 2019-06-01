@@ -170,8 +170,8 @@ public class ConsoleClient {
 
 	private static void copy(String current_path, Scanner in) {
 
-		String src = IO.resolvePath(current_path, in.next());
-		String dest = IO.resolvePath(current_path, in.nextLine());
+		String src = IO.resolvePath(current_path, in.next().trim());
+		String dest = IO.resolvePath(current_path, in.nextLine().trim());
 		
 		client.copy(username, src, dest);
 	}
