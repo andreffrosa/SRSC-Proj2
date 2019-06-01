@@ -11,4 +11,4 @@ KEYSTORE="./configs/fServer/accessControlServer/keystores.conf"
 TABLE="./configs/fServer/accessControlServer/access_table.txt"
 TOKEN="./configs/fServer/token_verification.conf"
 
-$JAVA $JAVA_ARGS $CP fServer.mainDispatcher.MainDispatcherServer $PORT $TLS $KEYSTORE $TABLE $TOKEN $@
+$JAVA $JAVA_ARGS $CP fServer.accessControlServer.AccessControlServer $PORT $TLS $KEYSTORE $TABLE $TOKEN $@
