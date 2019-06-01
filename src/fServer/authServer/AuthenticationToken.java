@@ -114,6 +114,10 @@ public class AuthenticationToken {
 
 		return raw_token;
 	}
+	
+	public static AuthenticationToken parseToken(String base64_token) throws IOException {
+		return parseToken(java.util.Base64.getDecoder().decode(base64_token));
+	}
 
 	public static AuthenticationToken parseToken(byte[] raw_token) throws IOException {
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(raw_token);

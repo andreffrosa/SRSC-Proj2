@@ -8,10 +8,13 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 
 import utility.ArrayUtil;
@@ -45,8 +48,7 @@ public class ConsoleClient {
 	static RemoteFileServiceClient client;
 	static String username;
 
-	public static void main(String[] args) throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
-	FileNotFoundException, IOException, UnrecoverableKeyException, KeyManagementException {
+	public static void main(String[] args) throws Exception {
 
 		if (args.length < 3) {
 			System.err.println("Usage: ConsoleClient <server-location> <keystore-configs> <login-configs>");
@@ -59,10 +61,16 @@ public class ConsoleClient {
 
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
-		byte[] iv = ArrayUtil.unparse(IO.loadProperties(login_configs).getProperty("IV"));
+		
+		Properties login_properties = IO.loadProperties(login_configs);
+		byte[] iv = ArrayUtil.unparse(login_properties.getProperty("IV"));
+		String hash_algorithm = login_properties.getProperty("HASH-ALGORITHM");
+		String hash_algorithm_provider = login_properties.getProperty("HASH-ALGORITHM-PROVIDER");
+		
+		MessageDigest hash = MessageDigest.getInstance(hash_algorithm, hash_algorithm_provider);
 		
 		client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
-				kstores[1].getKeystore(), location, iv);
+				kstores[1].getKeystore(), location, iv, hash);
 
 		Scanner in = new Scanner(System.in);
 
@@ -75,6 +83,8 @@ public class ConsoleClient {
 
 		username = "";
 
+		System.out.println( "Remote File Storage Service " + (new Date()).toString());
+		
 		while (!exit) {
 			System.out.print(username + "$" + current_path + "> ");
 			cmd = in.next().toLowerCase();
@@ -102,7 +112,7 @@ public class ConsoleClient {
 					current_path = changeDir(in, current_path);
 					break;
 				case LIST_FILES:
-					listFiles(current_path);
+					listFiles(current_path, in);
 					break;
 				case NEW_DIRECTORY:
 					mkdir(current_path, in);
@@ -147,7 +157,7 @@ public class ConsoleClient {
 	}
 
 	private static void getFileData(String current_path, Scanner in) {
-		String fileName = in.nextLine();
+		String fileName = IO.resolvePath(current_path, in.nextLine());
 		BasicFileAttributes bfa = client.getFileMetadata(username, String.format("%s/%s", current_path, fileName));
 		if(bfa != null) {
 			System.out.println(bfa.toString()); //check if this is good
@@ -156,14 +166,14 @@ public class ConsoleClient {
 	}
 
 	private static void rmDir(String current_path, Scanner in) {
-		String dirName = in.nextLine();
+		String dirName = IO.resolvePath(current_path, in.nextLine());
 		if(!client.removeDirectory(username, String.format("%s/%s", current_path, dirName)))
 			System.out.println("Error Deliting file: " + dirName);
 		
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
-		String fileNameString = in.nextLine();
+		String fileNameString = IO.resolvePath(current_path, in.nextLine());
 		if(!client.remove(username, String.format("%s/%s", current_path, fileNameString)))
 			System.out.println("Error Deliting file: " + fileNameString);
 
@@ -171,14 +181,13 @@ public class ConsoleClient {
 
 	private static void copy(String current_path, Scanner in) {
 
-		String fileName = in.next();
-		String dest = in.nextLine();
+		String fileName = IO.resolvePath(current_path, in.next());
+		String dest = IO.resolvePath(current_path, in.nextLine());
 		client.copy(username, String.format("%s/%s", current_path, fileName), String.format("/%s/%s", username, dest));
-
 	}
 
 	private static void download(String current_path, Scanner in) throws IOException {
-		String fileName = in.nextLine();
+		String fileName = IO.resolvePath(current_path, in.nextLine());
 		Path localFilePath = Paths.get(LOCAL_STORAGE, fileName);
 		byte[] data = client.download(username, String.format("%s/%s", current_path, fileName));
 
@@ -190,7 +199,7 @@ public class ConsoleClient {
 
 	private static void upload(String current_path, Scanner in) {
 
-		String fileName = in.nextLine();
+		String fileName = IO.resolvePath(current_path, in.nextLine());
 		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
 		byte[] data = null;
 		try {
@@ -205,21 +214,28 @@ public class ConsoleClient {
 
 	private static void mkdir(String current_path, Scanner in) {
 		
-		String dirName = String.format("%s/%s/", current_path, in.nextLine().trim());
+		String path = IO.resolvePath(current_path, in.nextLine().trim());
+		
+		String dirName = String.format("%s/%s/", current_path, path);
 		if (!client.mkdir(username, dirName))
 			System.out.println("Impossible to create directory");
 
 	}
 
-	private static void listFiles(String current_path) {
+	private static void listFiles(String current_path, Scanner in) {
 
-		List<String> files = client.listFiles(username, current_path);
+		List<String> files;
+		
+		String path = in.nextLine();
+		if(path.equals(""))
+			files = client.listFiles(username, current_path);
+		else
+			files = client.listFiles(username, IO.resolvePath(current_path, path));
+		
 		files.forEach(System.out::println);
-
 	}
 
 	private static void listCmds() {
-
 		System.out.println("Change directory: cd <path>");
 		System.out.println("List files: ls");
 		System.out.println("New Directory: mkdir <path>");
@@ -231,24 +247,11 @@ public class ConsoleClient {
 		System.out.println("Get metadata: file <pathToFile>");
 	}
 
+	
 	private static String changeDir(Scanner in, String current_path) {
 		String path = in.nextLine().trim();
 
-		Path p = Paths.get(current_path);
-
-		String folders[] = path.split("/");
-
-		String final_path = "";
-		for (String current_folder : folders) {
-			if (current_folder.equals(".."))
-				final_path = p.getParent().toString();
-			else if (current_folder.equals("."))
-				final_path = p.toString();
-			else
-				final_path = p.resolve(current_folder).toString();
-		}
-
-		return final_path;
+		return IO.resolvePath(current_path, path);
 	}
 
 	private static String login(Scanner in, RemoteFileServiceClient client) {

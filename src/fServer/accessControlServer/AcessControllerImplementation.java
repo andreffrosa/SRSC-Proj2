@@ -9,16 +9,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import fServer.authServer.TokenVerifier;
+
 public class AcessControllerImplementation implements AcessControler {
 
 	private static final String REGEX = " ";
 	private static final int READ = 0;
 	private static final int WRITE = 1;
 	
-	public Map<String, boolean[]> permissionsMap;
+	private Map<String, boolean[]> permissionsMap;
+	private TokenVerifier tokenVerifier;
 
-	public AcessControllerImplementation(String filePath) throws IOException {
+	public AcessControllerImplementation(String filePath, TokenVerifier tokenVerifier) throws IOException {
 		loadConfig(filePath);
+		this.tokenVerifier = tokenVerifier;
 	}
 
 	private void loadConfig(String filePath) throws IOException {

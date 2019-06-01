@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.AbstractMap;
+import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,7 +83,6 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 
 				pending_requests.put(username, new SessionPendingRequest(nonce+1, kp, System.currentTimeMillis() + REQUEST_TTL));
 
-				// TODO: Enviar um IV dinâmico como arg
 				SessionEstablishmentParameters msg1 = new SessionEstablishmentParameters(nonce, dhParams.getP(), dhParams.getG(), dh.getSecret_key_size(), 
 						Cryptography.encodePublicKey(kp.getPublic()), 
 						dh.getSecret_key_algorithm(), tokenIssuer.getCiphersuite(), 
@@ -126,6 +126,8 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 					cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(tokenIssuer.getIv()));
 
 					byte[] msg2 = wrapToken(token, client_nonce + 1, cipher);
+					
+					System.out.println(username + " authentication sucessful! Token valid until " + (new Date(token.getExpiration_date())).toString());
 					
 					return new RestResponse("1.0", 200, "OK", msg2);
 				} else {

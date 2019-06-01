@@ -1,6 +1,9 @@
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 
 import utility.Cryptography;
+import utility.IO;
 
 public class Temp {
 
@@ -16,6 +19,6 @@ public class Temp {
 		password = "password";
 		p_hash = Cryptography.digest(hash, password.getBytes());
 		System.out.println(java.util.Base64.getEncoder().encodeToString(p_hash));
+	
 	}
-
 }

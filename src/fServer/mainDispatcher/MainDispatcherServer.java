@@ -1,18 +1,14 @@
 package fServer.mainDispatcher;
 
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.util.Properties;
 
-import javax.net.ssl.SSLServerSocketFactory;
-
 import fServer.authServer.TokenVerifier;
-import fileService.RemoteFileService;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
-import test.myHelloWorld;
 import utility.IO;
 import utility.MyKeyStore;
+import utility.TLS_Utils;
 
 public class MainDispatcherServer {
 
@@ -24,54 +20,40 @@ public class MainDispatcherServer {
 		}
 
 		int port = Integer.parseInt(args[0]);
-		
+		String tls_configs = args[1];
+		String keystores_configs = args[2];
+		String endpoints = args[3];
 		String token_verif = args[4];
 
-		// Read Configs
-		Properties tls_properties = IO.loadProperties(args[1]);
-		
-		String[] protocols = new String[] {tls_properties.getProperty("TLS-PROT-ENF")};
-		boolean authenticate_clients = tls_properties.getProperty("TLS-AUTH").equals("MUTUAL");
-		String[] ciphersuites = new String[] {tls_properties.getProperty("CIPHERSUITES")};
-		String secure_random = tls_properties.getProperty("SECURE-RANDOM");
-		SecureRandom sr = secure_random == null ? null : SecureRandom.getInstance(secure_random);
-		
-		// Read Keystore Properties
-		Properties keystore_properties = IO.loadProperties(args[2]);
-		
-		// TODO: Transformar em constantes
-		String keystore_path = keystore_properties.getProperty("keystore");
-		String keystore_password = keystore_properties.getProperty("keystore-password");
-		String keystore_type = keystore_properties.getProperty("keystore-type");
-		String truststore_path = keystore_properties.getProperty("truststore");
-		String truststore_password = keystore_properties.getProperty("truststore-password");
-		String truststore_type = keystore_properties.getProperty("truststore-type");
-		
-		KeyStore ks = MyKeyStore.loadKeyStore(keystore_path, keystore_password, keystore_type);
-		KeyStore ts = MyKeyStore.loadKeyStore(truststore_path, truststore_password, truststore_type);
-		
+		// Load KeyStores
+		MyKeyStore[] ks_stores = TLS_Utils.loadKeyStores(keystores_configs);
+		KeyStore ks = ks_stores[0].getKeystore();
+		String ks_password = ks_stores[0].getPassword();
+		KeyStore ts = ks_stores[1].getKeystore();
+
 		// Read Endpoints
-		Properties service_endpoints = IO.loadProperties(args[3]);
+		Properties service_endpoints = IO.loadProperties(endpoints);
 		String authentication_server = service_endpoints.getProperty("authentication-server");
 		String access_control_server = service_endpoints.getProperty("access-control-server");
 		String storage_server = service_endpoints.getProperty("storage-server");
-		
+
 		TokenVerifier tokenVerifier = TokenVerifier.getVerifier(token_verif);
 
-		// Create HTTPS Server
-		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, tokenVerifier, ks, keystore_password, ts);
+		// Create Service Handler
+		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, tokenVerifier, ks, ks_password, ts);
 
-		SSLServerSocketFactory factory =  new CustomSSLServerSocketFactory(ks, keystore_password, ts, ciphersuites, protocols, authenticate_clients, sr);
+		// Create HTTPS Server
+		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);
 		mySecureRestServer server = new mySecureRestServer(port, dispatcher, factory);
 		server.start();
-		
+
 		System.out.println("\n\t#######################################################"
-				         + "\n\t      MainDispatcher ready @ " + server.getAddress()
-				         + "\n\t                TLS Version: " + protocols[0]
-				         + "\n\t               Chipersuites: " + ciphersuites[0]
-				         + "\n\t               SecureRandom: " + secure_random
-				         + "\n\t      Client Authentication: " + authenticate_clients 
-			             + "\n\t#######################################################");
+					     + "\n\t   MainDispatcherServer ready @ " + server.getAddress()
+					     + "\n\t                   TLS Version: " + factory.getTLSVersions()[0]
+						 + "\n\t                  Chipersuites: " + factory.getDefaultCipherSuites()[0]
+						 + "\n\t                  SecureRandom: " + (factory.getSecureRandom() == null ? "null" : factory.getSecureRandom().getAlgorithm())
+						 + "\n\t         Client Authentication: " + factory.clientAuthentication() 
+						 + "\n\t#######################################################");
 
 	}
 

@@ -13,17 +13,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fServer.authServer.TokenVerifier;
+
 /**
  * @author ruben
  *
  *This class is an implementation of the Storage Service.
  *
  */
-public class StorageImplementaion implements StorageService {
+public class StorageImplementation implements StorageService {
 
+	private TokenVerifier tokenVerifier;
+	
 	//TODO: all syncronized
 	//TODO: O que significa tabelas no enunciado	
-	public StorageImplementaion() {	}
+	public StorageImplementation(TokenVerifier tokenVerifier) {
+		this.tokenVerifier = tokenVerifier;
+	}
 
 	@Override
 	public List<String> listFiles(String username, String path) {

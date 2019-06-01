@@ -1,25 +1,24 @@
 /**
  * 
  */
-package fileService;
+package fServer.mainDispatcher;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;	
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import rest.RestResponse;
 
 /**
  * @author Ruben Silva & Andre Rosa
@@ -40,21 +39,22 @@ public interface RemoteFileService {
 	 * @param password user password
 	 * @return True if everything if correct (and a token on the authorization header), false if credentials are wrong.
 	 */
-	@POST
+	/*@POST
 	@Path("/login/{username}")
 	@Consumes(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean login(@PathParam("username") String username, String password);
+	public boolean login(@PathParam("username") String username, String password);*/
 	
 	/**
 	 *  List files or directories on the specified path
 	 * @param username user username 
 	 * @param path path to list files
 	 * @return A list of names of the files and subdirectories on that path.
+	 * @throws Exception 
 	 */
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(@HeaderParam("Authorization") String  token, @PathParam("username") String username, @PathParam("path") String path);
+	public RestResponse listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Creates a directory on the specified path.
