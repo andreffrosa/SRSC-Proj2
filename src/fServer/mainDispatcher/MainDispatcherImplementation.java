@@ -179,7 +179,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse remove(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.READ_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -192,7 +192,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse removeDirectory(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.READ_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", auth.getBase64())
