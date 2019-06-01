@@ -8,15 +8,11 @@ import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.util.AbstractMap;
-import java.util.Map.Entry;
 import java.util.Properties;
 
-import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;
 
@@ -26,22 +22,20 @@ public class TokenIssuer {
 	private KeyPair kp;
 	private Signature sig;
 	private String ciphersuite;
-	private byte[] iv;
+	private boolean use_iv;
+	private int iv_size;
 	
-	public TokenIssuer(long token_ttl, KeyPair kp, Signature sig, String ciphersuite, byte[] iv) {
+	public TokenIssuer(long token_ttl, KeyPair kp, Signature sig, String ciphersuite, boolean use_iv, int iv_size) {
 		this.token_ttl = token_ttl;
 		this.kp = kp;
 		this.sig = sig;
 		this.ciphersuite = ciphersuite;
-		this.iv = iv;
+		this.use_iv = use_iv;
+		this.iv_size = iv_size;
 	}
 
 	public String getCiphersuite() {
 		return ciphersuite;
-	}
-
-	public byte[] getIv() {
-		return iv;
 	}
 
 	public long getToken_ttl() {
@@ -54,8 +48,16 @@ public class TokenIssuer {
 
 	public Signature getSig() {
 		return sig;
-	}
+	}	
 	
+	public boolean useIv() {
+		return use_iv;
+	}
+
+	public int getIv_size() {
+		return iv_size;
+	}
+
 	public AuthenticationToken newToken(User user) throws InvalidKeyException, SignatureException, IOException {
 		String username = user.getUsername();
 		long expiration_date = System.currentTimeMillis() + token_ttl;
@@ -75,7 +77,8 @@ public class TokenIssuer {
 		String certificate_alias  = properties.getProperty("CERTIFICATE-ALIAS");
 		
 		String ciphersuite = properties.getProperty("CIPHERSUITE");
-		byte[] iv = ArrayUtil.unparse(properties.getProperty("IV"));
+		boolean use_iv = Boolean.parseBoolean(properties.getProperty("USE-IV", "false"));
+		int iv_size = Integer.parseInt(properties.getProperty("IV-SIZE", "0"));
 		
 		MyKeyStore ks = new MyKeyStore(keystore_location, keystore_password, keystore_type);
 		KeyStore.PrivateKeyEntry e = (PrivateKeyEntry) ks.getEntry(certificate_alias);
@@ -84,7 +87,8 @@ public class TokenIssuer {
 		
 		Signature sig = signature_algorithm_provider == null ? Signature.getInstance(signature_algorithm) : Signature.getInstance(signature_algorithm, signature_algorithm_provider);
 		
-		return new TokenIssuer(token_ttl, kp, sig, ciphersuite, iv);
+		return new TokenIssuer(token_ttl, kp, sig, ciphersuite, use_iv, iv_size);
 	}
+	
 	
 }

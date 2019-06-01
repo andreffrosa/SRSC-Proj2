@@ -143,4 +143,11 @@ public class Cryptography {
         return new Cipher[] {cEnc, cDec};
 	}
 	
+	public static byte[] createIV(int blockSize) {
+		SecureRandom randomSecureRandom = new SecureRandom();
+		byte[] iv = new byte[blockSize];
+		randomSecureRandom.nextBytes(iv);
+		return iv;
+	}
+	
 }

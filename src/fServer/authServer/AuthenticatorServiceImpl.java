@@ -124,12 +124,19 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			SecretKey ks = dh.establishSecretKey(kp.getPrivate(), cliet_pub_key);
 			
 			AuthenticationToken token = tokenIssuer.newToken(user);
-			// TODO: gerar IV automaticamente
-			Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.DECRYPT_MODE, ks, tokenIssuer.getIv());
-			cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(tokenIssuer.getIv()));
+			
+			byte[] iv = null;
+			if(tokenIssuer.useIv()) {
+				iv = Cryptography.createIV(tokenIssuer.getIv_size());
+			} else {
+				iv = new byte[0];
+			}
+			
+			Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.ENCRYPT_MODE, ks, iv);
+			//cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(iv));
 			byte[] enc_token = Cryptography.encrypt(cipher, token.serialize());
 			
-			byte[] server_answer = buildAnswer(client_nonce+1, kp.getPublic(), Cryptography.encrypt(ciphers[0], tokenIssuer.getIv()), ciphers[0]);
+			byte[] server_answer = buildAnswer(client_nonce+1, kp.getPublic(), Cryptography.encrypt(ciphers[0], iv), ciphers[0]);
 			
 			EncryptedToken encToken = new EncryptedToken(enc_token, server_answer);
 			
