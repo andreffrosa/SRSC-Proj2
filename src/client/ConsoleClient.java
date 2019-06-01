@@ -85,7 +85,8 @@ public class ConsoleClient {
 					if (username != null) {
 						current_path = "/";
 						logedIn = true;
-					}
+					} else
+						username = "";
 					break;
 				case EXIT:
 					exit = true;
@@ -250,14 +251,15 @@ public class ConsoleClient {
 
 		String password = in.nextLine();
 		
+		boolean result = false;
 		try {
-			client.login(username, password);
+			result = client.login(username, password);
 		} catch (ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
 			System.out.println("\t" + e.getMessage());
 			return null;
 		}
 
-		return username;
+		return result ? username : null;
 	}
 
 }

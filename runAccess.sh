@@ -8,7 +8,7 @@ JAVA_ARGS="-Djava.net.preferIPv4Stack=true"
 PORT="6666"
 TLS="./configs/fServer/servertls.conf"
 KEYSTORE="./configs/fServer/accessControlServer/keystores.conf"
-ENDPOINTS="./configs/fServer/service-endpoints.txt"
+TABLE="./configs/fServer/accessControlServer/access_table.txt"
 TOKEN="./configs/fServer/token_verification.conf"
 
-$JAVA $JAVA_ARGS $CP fServer.mainDispatcher.MainDispatcherServer $PORT $TLS $KEYSTORE $ENDPOINTS $TOKEN $@
+$JAVA $JAVA_ARGS $CP fServer.mainDispatcher.MainDispatcherServer $PORT $TLS $KEYSTORE $TABLE $TOKEN $@

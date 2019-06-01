@@ -33,8 +33,7 @@ import utility.LoginUtility;
 
 public class AuthenticationClient {
 
-	
-	public static RestResponse get_requestSession(mySecureRestClient client, String username, String resource_path) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+	public static RestResponse get_requestSession(mySecureRestClient client, String resource_path, String username) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
 		return client.newRequest(resource_path)
 				.addPathParam("requestSession")
 				.addPathParam(username)

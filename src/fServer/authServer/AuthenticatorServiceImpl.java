@@ -14,6 +14,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -131,6 +132,8 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			
 			EncryptedToken encToken = encapsulateToken(token, ks, iv, ciphers[0], client_nonce+1,  kp.getPublic());
 		
+			System.out.println( username + " logged in! Token valid until " + new Date(token.getExpiration_date()).toString());
+			
 			return new RestResponse("1.0", 200, "OK", encToken);
 		} else {
 			return new RestResponse("1.0", 403, "Forbidden", (username + " has no pending request!").getBytes());
