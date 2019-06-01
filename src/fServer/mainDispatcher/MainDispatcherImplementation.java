@@ -33,8 +33,9 @@ import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.RequestHandler;
 
-public class MainDispatcherImplementation implements RemoteFileService, AuthenticatorService {
+public class MainDispatcherImplementation implements RemoteFileService, AuthenticatorService, StorageService {
 
+	
 	private static final int MAX_TRIES = 3;
 
 	private TokenVerifier tokenVerifier;
@@ -100,9 +101,10 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 					throw new RuntimeException("Acess Request: " + response.getStatusCode());
 			});
 
-			if(hasAccess)	
+			if(hasAccess)	{
+				System.out.println("Issuing request");
 				return requestHandler.execute(auth);
-			else
+			}else
 				return new RestResponse("1.0", 403, "Forbidden", String.format("%s has no permissions to %s\n.", auth.getUsername(), opType));
 		} else {
 			return new RestResponse("1.0", 403, "Forbidden", "token is expired!".getBytes());

@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.core.Response.Status;
+
 import fServer.authServer.TokenVerifier;
+import rest.RestResponse;
 
 /**
  * @author ruben
@@ -32,112 +35,107 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public List<String> listFiles(String token, String username, String path) {
+	public RestResponse listFiles(String token, String username, String path) {
 
 		Path dirPath = buildPath(username, path);
-
-		if(Files.isDirectory(dirPath)) {			
-			File dir = new File(dirPath.toString());
-			return Arrays.asList(dir.list());
-		}
-
-		return new ArrayList<>(0);
+		return new RestResponse("1.0", Status.OK.getStatusCode(), "Sending list", listFiles(dirPath)) ;
+		
 	}
 
 	@Override
-	public boolean mkdir(String token, String username, String path) {
+	public RestResponse mkdir(String token, String username, String path) {
 
 		Path dirPath = buildPath(username, path);
-		return new File(dirPath.toString()).mkdirs();
+		return new  RestResponse("1.0", Status.OK.getStatusCode(), "OK", new File(dirPath.toString()).mkdirs());
 	}
 
 	//TODO: Create metadata
 	@Override
-	public boolean upload(String token, String username, String path, byte[] data) {
+	public RestResponse upload(String token, String username, String path, byte[] data) {
 
 		try {
 
 			Path filePath = buildPath(username, path);
 			Files.write(filePath, data);
-			return true;
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
 
 		} catch (IOException e) {
-			return false;
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", false);
 		}
 	}
 
 	@Override
-	public byte[] download(String token, String username, String path) {
+	public RestResponse download(String token, String username, String path) {
 
 		try {
 			Path filePath = buildPath(username, path);
 			if(Files.exists(filePath) && Files.isReadable(filePath)) 
-				return Files.readAllBytes(filePath);
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", Files.readAllBytes(filePath));
 		} catch (IOException e) { }
 
-		return null; //TODO: better return or in server check is null to send not found code.
+		return new RestResponse("1.0", Status.NOT_FOUND.getStatusCode(), "File not found", null);
 	}
 
 	@Override
-	public boolean copy(String token, String username, String origin, String dest) {
+	public RestResponse copy(String token, String username, String origin, String dest) {
 
 		Path originPath = buildPath(username, origin);
 		Path destPath = buildPath(username, dest);
 
 		if(!Files.exists(originPath) || !Files.isReadable(originPath))
-			return false;
+			return new RestResponse("1.0", 200, "OK", false);;
 
 		try {
 
-			Files.copy(originPath, destPath.resolve(originPath.getFileName()));
-			return true;
+			Files.copy(originPath, destPath);
+			return new RestResponse("1.0", 200, "OK", true);
 
 		} catch (IOException e) {
-			return false;
+			return new RestResponse("1.0", 200, "OK", false);
 		}
 	}
 
 	@Override
-	public boolean remove(String token, String username, String path) {
+	public RestResponse remove(String token, String username, String path) {
 
 		Path filePath = buildPath(username, path);
 
 		try {
-			return Files.deleteIfExists(filePath);
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK",  Files.deleteIfExists(filePath));
 		} catch (IOException e) {
-			return false;
+			return new RestResponse("1.0", 200, "OK", false);
 		}
 
 	}
 
 	@Override
-	public boolean removeDirectory(String token, String username, String path) {
-
-		if(listFiles(token, username, path).size() > 0)
-			return false;
-
+	public RestResponse removeDirectory(String token, String username, String path) {
+		
 		Path dirPath = buildPath(username, path);
+		if(listFiles(dirPath).size() > 0)
+			return new RestResponse("1.0", 200, "OK", false);
+		
 		try {
 
 			Files.delete(dirPath);
-			return true;
+			return new RestResponse("1.0", 200, "OK", false);
 
 		} catch (IOException e) {
-			return false;
+			return new RestResponse("1.0", 200, "OK", false);
 		}
 
 	}
 
 	@Override
-	public BasicFileAttributes getFileMetadata(String token, String username, String path) {
+	public RestResponse getFileMetadata(String token, String username, String path) {
 
 		Path filePath = buildPath(username, path);
 		try {
 			if(Files.exists(filePath))
-				return Files.readAttributes(filePath, BasicFileAttributes.class);
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", Files.readAttributes(filePath, BasicFileAttributes.class));
 
 		}catch(IOException e){	}
-		return null;
+		return new RestResponse("1.0", 200, "OK", null);
 	}
 
 	private Path buildPath(String username, String path) {
@@ -149,5 +147,14 @@ public class StorageImplementation implements StorageService {
 		Path dirPath = Paths.get(username, path);
 		return dirPath;
 	}
-
+	
+	private List<String> listFiles(Path dirPath){
+		
+		if(Files.isDirectory(dirPath)) {			
+			File dir = new File(dirPath.toString());
+			return Arrays.asList(dir.list());
+		}
+		
+		return new ArrayList<>(0);
+	}
 }

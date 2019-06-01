@@ -19,6 +19,7 @@ import fServer.authServer.DeniedAccessException;
 import fServer.authServer.ExpiredTokenException;
 import fServer.authServer.WrongChallengeAnswerException;
 import fServer.mainDispatcher.RemoteFileService;
+import rest.RestRequest;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
@@ -153,17 +154,18 @@ public class RemoteFileServiceClient{
 
 	public boolean copy(String username, String origin, String dest) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+			
+			RestResponse response= client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addPathParam("cp")
 					.addPathParam(username)
 					.addPathParam(origin)
 					.addPathParam(dest)
 					.put(null);
-
+									
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
-			} else
+			} else 
 				throw new RuntimeException("cp: " + response.getStatusCode());
 		});
 	}
