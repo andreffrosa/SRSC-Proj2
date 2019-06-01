@@ -14,7 +14,7 @@ import java.util.Properties;
 import fServer.authServer.AuthenticationToken;
 import fServer.authServer.TokenVerifier;
 
-public class AcessControllerImplementation implements AcessControler {
+public class AccessControllerImplementation implements AccessControler {
 
 	private static final String REGEX = " ";
 	private static final int READ_POS = 0;
@@ -23,7 +23,7 @@ public class AcessControllerImplementation implements AcessControler {
 	private Map<String, boolean[]> permissionsMap;
 	private TokenVerifier tokenVerifier;
 
-	public AcessControllerImplementation(String filePath, TokenVerifier tokenVerifier) throws IOException {
+	public AccessControllerImplementation(String filePath, TokenVerifier tokenVerifier) throws IOException {
 		loadConfig(filePath);
 		this.tokenVerifier = tokenVerifier;
 	}
@@ -59,35 +59,27 @@ public class AcessControllerImplementation implements AcessControler {
 	}
 		
 	private boolean canRead(String username) {
-		
-		System.out.print("Recieved read access verification for user " + username + ". Result: ");
-		
+
 		if(permissionsMap.containsKey(username)) 
 			if(permissionsMap.get(username)[READ_POS]) {
-				System.out.println("granted");
 				return true;
 			}
-			
-		System.out.println("denied");
+
 		return false;
 	}
 
 	private boolean canWrite(String username) {
 		
-		System.out.print("Recieved write access verification for user " + username + ". Result: ");
-		
 		if(permissionsMap.containsKey(username))
-			if(permissionsMap.get(username)[WRITE_POS]) {
-				System.out.println("granted");				
+			if(permissionsMap.get(username)[WRITE_POS]) {		
 				return true;
 			}
-		
-		System.out.println("denied");		
+			
 		return false;
 	}
 
 	@Override
-	public boolean hasAccess(String token, String opeartion, String username) throws InvalidKeyException, SignatureException, IOException {
+	public boolean hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
 		
 		AuthenticationToken auth = AuthenticationToken.parseToken(token);
 		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
@@ -95,11 +87,16 @@ public class AcessControllerImplementation implements AcessControler {
 			return false;
 		}
 		
-		if(opeartion.equals(AcessControler.WRITE_ACCESS_REQUEST))
-			return canWrite(username);
-		else
-			return canRead(username);
+		boolean result = false;
 		
+		if(operation.equals(AccessControler.WRITE_ACCESS_REQUEST))
+			result = canWrite(username);
+		else
+			result = canRead(username);
+		
+		System.out.print( username + " has access to " + operation  + "? " + (result ? "granted" : "denied"));
+		
+		return result;
 	}
 
 }

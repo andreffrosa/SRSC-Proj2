@@ -21,7 +21,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.net.SocketFactory;
 
-import fServer.accessControlServer.AcessControler;
+import fServer.accessControlServer.AccessControler;
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
 import fServer.authServer.AuthenticatorService;
@@ -79,15 +79,15 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 		throw new RuntimeException("Aborted request! Too many tries...");
 	}
 
-	private <K, T> RestResponse processRequest(String token, String opType, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
-
+	private <K,T> RestResponse processRequest(String token, String opType, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
+		
 		AuthenticationToken auth = AuthenticationToken.parseToken(token);
 
 		if(tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
 
 			boolean hasAccess = processRequest(ac_server_location, (location) -> {
 				RestResponse response = client.setLocation(ac_server_location)
-						.newRequest(AcessControler.PATH)
+						.newRequest(AccessControler.PATH)
 						.addHeader("Authorization", auth.getBase64())
 						.addPathParam(opType)
 						.addPathParam(auth.getUsername())
@@ -113,7 +113,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	@Override
 	public RestResponse listFiles(String token, String username, String path) throws Exception {
 
-		return processRequest(token, AcessControler.READ_ACCESS_REQUEST , (auth) -> {
+		return processRequest(token, AccessControler.READ_ACCESS_REQUEST , (auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -126,7 +126,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse mkdir(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST , (auth) -> {
+		return processRequest(token, AccessControler.WRITE_ACCESS_REQUEST , (auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -139,20 +139,20 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse upload(String token, String username, String path, byte[] data) throws Exception {
-		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AccessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
 					.addPathParam("put")
 					.addPathParam(username)
 					.addPathParam(path)
-					.post(data);
+					.put(data);
 		});	
 	}
 
 	@Override
 	public RestResponse download(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.READ_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AccessControler.READ_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -165,7 +165,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse copy(String token, String username, String origin, String dest) throws Exception {
-		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AccessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -179,7 +179,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse remove(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AccessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -192,7 +192,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse removeDirectory(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
+		return processRequest(token, AccessControler.WRITE_ACCESS_REQUEST ,(auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
@@ -205,7 +205,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	@Override
 	public RestResponse getFileMetadata(String token, String username, String path) throws Exception {
-		return processRequest(token, AcessControler.READ_ACCESS_REQUEST, (auth) -> {
+		return processRequest(token, AccessControler.READ_ACCESS_REQUEST, (auth) -> {
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())

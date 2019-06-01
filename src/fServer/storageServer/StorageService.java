@@ -6,6 +6,7 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -14,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+@Path(StorageService.PATH)
 public interface StorageService {
 
 	String PATH = "/StorageService";
@@ -28,7 +30,7 @@ public interface StorageService {
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public List<String> listFiles(@PathParam("username") String username, @PathParam("path") String path);
+	public List<String> listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Creates a directory on the specified path.
@@ -39,7 +41,7 @@ public interface StorageService {
 	@POST
 	@Path("/mkdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean mkdir(@PathParam("username") String username, @PathParam("path") String path);
+	public boolean mkdir(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Uploads a file to the specified directory.
@@ -52,7 +54,7 @@ public interface StorageService {
 	@Path("/put/{username}/{path}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean upload(@PathParam("username") String username, @PathParam("path") String path, byte[] data );
+	public boolean upload(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path, byte[] data );
 	
 	/**
 	 * Downloads a file that resides in the specified directory
@@ -63,7 +65,7 @@ public interface StorageService {
 	@GET
 	@Path("/get/{username}/{path}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public byte[] download(@PathParam("username") String username, @PathParam("path") String path);
+	public byte[] download(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Copies a file from some path1 to some other path2.
@@ -75,7 +77,7 @@ public interface StorageService {
 	@PUT
 	@Path("/cp/{username}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean copy(@PathParam("username") String username, @QueryParam("origin") String origin, @QueryParam("dest") String dest);
+	public boolean copy(@HeaderParam("Authorization") String token, @PathParam("username") String username, @QueryParam("origin") String origin, @QueryParam("dest") String dest);
 	
 	/**
 	 * Removes a file that resides on the specified path.
@@ -86,7 +88,7 @@ public interface StorageService {
 	@DELETE
 	@Path("/rm/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean remove(@PathParam("username") String username, @PathParam("path") String path);
+	public boolean remove(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Removes a directory with the path provided.
@@ -97,7 +99,7 @@ public interface StorageService {
 	@DELETE
 	@Path("/rmdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean removeDirectory(@PathParam("username") String username, @PathParam("path") String path);
+	public boolean removeDirectory(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	/**
 	 * Retrieved a file metadata
@@ -108,7 +110,7 @@ public interface StorageService {
 	@GET
 	@Path("/file/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public BasicFileAttributes getFileMetadata(@PathParam("username") String username, @PathParam("path") String path);
+	public BasicFileAttributes getFileMetadata(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path);
 	
 	
 }

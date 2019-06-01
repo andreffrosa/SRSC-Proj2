@@ -127,6 +127,7 @@ public class ConsoleClient {
 					break;
 				case LOGOUT:
 					// TODO
+					client.logout();
 					username = "";
 					current_path = "";
 					logedIn = false;
@@ -152,14 +153,12 @@ public class ConsoleClient {
 		if(bfa != null) {
 			System.out.println(bfa.toString()); //check if this is good
 		}
-
 	}
 
 	private static void rmDir(String current_path, Scanner in) {
 		String dirName = IO.resolvePath(current_path, in.nextLine());
 		if(!client.removeDirectory(username, String.format("%s/%s", current_path, dirName)))
-			System.out.println("Error Deliting file: " + dirName);
-		
+			System.out.println("Error Deleting file: " + dirName);
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
@@ -189,12 +188,14 @@ public class ConsoleClient {
 
 	private static void upload(String current_path, Scanner in) {
 
-		String fileName = IO.resolvePath(current_path, in.nextLine());
+		String fileName = IO.resolvePath("./", in.nextLine());
 		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
 		byte[] data = null;
 		try {
 			if (Files.exists(localFilePath) && Files.isReadable(localFilePath))
 				data = Files.readAllBytes(localFilePath);
+			System.out.println(new String(data));
+			System.out.println(String.format("%s/%s", current_path, fileName));
 			client.upload(username, String.format("%s/%s", current_path, fileName), data);
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + fileName);
@@ -222,7 +223,7 @@ public class ConsoleClient {
 		else
 			files = client.listFiles(username, IO.resolvePath(current_path, path));
 		
-		files.forEach(System.out::println);
+		files.forEach( f -> System.out.println("\t" + f));
 	}
 
 	private static void listCmds() {

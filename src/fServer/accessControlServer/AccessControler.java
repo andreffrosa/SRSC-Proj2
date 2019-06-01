@@ -12,11 +12,8 @@ import javax.ws.rs.Produces;
 
 import http.MediaType;
 
-
-
-@Path(AcessControler.PATH)
-public interface AcessControler {
-
+@Path(AccessControler.PATH)
+public interface AccessControler {
 	
 	public static final String PATH = "/access";
 	
@@ -33,8 +30,6 @@ public interface AcessControler {
 	@GET
 	@Path("/{operation}/{username}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public boolean hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String opeartion, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException;
-	
-	
+	public boolean hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException;
 		
 }

@@ -1,5 +1,5 @@
 
 
 authentication-server: https://localhost:8050/
-acess-control-server: https://localhost:6666/
+access-control-server: https://localhost:6666/
 storage-server: https://localhost:9999/

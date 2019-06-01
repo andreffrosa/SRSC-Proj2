@@ -32,7 +32,7 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public List<String> listFiles(String username, String path) {
+	public List<String> listFiles(String token, String username, String path) {
 
 		Path dirPath = buildPath(username, path);
 
@@ -45,7 +45,7 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public boolean mkdir(String username, String path) {
+	public boolean mkdir(String token, String username, String path) {
 
 		Path dirPath = buildPath(username, path);
 		return new File(dirPath.toString()).mkdirs();
@@ -53,7 +53,7 @@ public class StorageImplementation implements StorageService {
 
 	//TODO: Create metadata
 	@Override
-	public boolean upload(String username, String path, byte[] data) {
+	public boolean upload(String token, String username, String path, byte[] data) {
 
 		try {
 
@@ -67,7 +67,7 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public byte[] download(String username, String path) {
+	public byte[] download(String token, String username, String path) {
 
 		try {
 			Path filePath = buildPath(username, path);
@@ -79,7 +79,7 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public boolean copy(String username, String origin, String dest) {
+	public boolean copy(String token, String username, String origin, String dest) {
 
 		Path originPath = buildPath(username, origin);
 		Path destPath = buildPath(username, dest);
@@ -98,7 +98,7 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public boolean remove(String username, String path) {
+	public boolean remove(String token, String username, String path) {
 
 		Path filePath = buildPath(username, path);
 
@@ -111,9 +111,9 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public boolean removeDirectory(String username, String path) {
+	public boolean removeDirectory(String token, String username, String path) {
 
-		if(listFiles(username, path).size() > 0)
+		if(listFiles(token, username, path).size() > 0)
 			return false;
 
 		Path dirPath = buildPath(username, path);
@@ -126,12 +126,10 @@ public class StorageImplementation implements StorageService {
 			return false;
 		}
 
-
-
 	}
 
 	@Override
-	public BasicFileAttributes getFileMetadata(String username, String path) {
+	public BasicFileAttributes getFileMetadata(String token, String username, String path) {
 
 		Path filePath = buildPath(username, path);
 		try {

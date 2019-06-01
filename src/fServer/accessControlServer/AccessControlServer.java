@@ -31,7 +31,7 @@ public class AccessControlServer {
 		TokenVerifier tokenVerifier = TokenVerifier.getVerifier(token_verif);
 
 		// Create Service Handler
-		AcessControllerImplementation ac = new AcessControllerImplementation(access_table, tokenVerifier);
+		AccessControllerImplementation ac = new AccessControllerImplementation(access_table, tokenVerifier);
 
 		// Create HTTPS Server
 		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);
