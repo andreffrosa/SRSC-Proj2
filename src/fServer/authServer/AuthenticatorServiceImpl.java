@@ -14,10 +14,8 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.AbstractMap;
 import java.util.Date;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.BadPaddingException;
@@ -27,10 +25,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.DHParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 
 import rest.RestResponse;
 import utility.Cryptography;
+import utility.LoginUtility;
 
 public class AuthenticatorServiceImpl implements AuthenticatorService {
 
@@ -42,17 +40,20 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 	private SecureRandom sr;
 	private DiffieHellman dh;
 	private TokenIssuer tokenIssuer;
+	private LoginUtility login_util;
 
-	public AuthenticatorServiceImpl(DiffieHellman dh, Map<String,User> authentication_table, TokenIssuer tokenIssuer) {
+	public AuthenticatorServiceImpl(DiffieHellman dh, Map<String,User> authentication_table, TokenIssuer tokenIssuer, LoginUtility login_util) {
 		this.dh = dh;
 		this.sr = dh.getSecureRandom();
 		this.authentication_table = authentication_table;
 		this.tokenIssuer = tokenIssuer;
+		this.login_util = login_util;
 		this.pending_requests = new ConcurrentHashMap<>();
 		startGarbageCollector();
 	}
 
 	private void startGarbageCollector() {
+
 		new Thread(()-> {
 			while(true) {
 				try {
@@ -67,8 +68,6 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		}).start();
 
 	}
-	
-	// TODO: O que fazer com as excepções? Lançar throw?
 
 	@Override
 	public RestResponse requestSession(String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
@@ -76,19 +75,17 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		User user = authentication_table.get(username);
 		if(user != null) {
 			if(user.isAllowed()) {
-				// Generate a nonce and a KeyPair for this request
+				// Generate a nonce for this request
 				long nonce = Cryptography.genNonce(sr);
 				DHParameterSpec dhParams = dh.getParams();
-				KeyPair	kp = dh.genKeyPair();
 
-				pending_requests.put(username, new SessionPendingRequest(nonce+1, kp, System.currentTimeMillis() + REQUEST_TTL));
+				pending_requests.put(username, new SessionPendingRequest(nonce+1, System.currentTimeMillis() + REQUEST_TTL));
 
-				SessionEstablishmentParameters msg1 = new SessionEstablishmentParameters(nonce, dhParams.getP(), dhParams.getG(), dh.getSecret_key_size(), 
-						Cryptography.encodePublicKey(kp.getPublic()), 
+				SessionEstablishmentParameters params = new SessionEstablishmentParameters(nonce, dhParams.getP(), dhParams.getG(), dh.getSecret_key_size(), 
 						dh.getSecret_key_algorithm(), tokenIssuer.getCiphersuite(), 
 						dh.getSecureRandom().getAlgorithm(), dh.getProvider());
 
-				return new RestResponse("1.0", 200, "OK", msg1);
+				return new RestResponse("1.0", 200, "OK", params);
 			} else {
 				return new RestResponse("1.0", 403, "Forbidden", (username + " is blocked!").getBytes());
 			}
@@ -98,57 +95,68 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 	}
 
 	@Override
-	public RestResponse requestToken(String username, String user_public_value, long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException {
+	public RestResponse requestToken(String username, long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException {
 
 		SessionPendingRequest request = this.pending_requests.get(username);
 
 		if(request != null) {
 			User user = authentication_table.get(username);
 
-			PublicKey cliet_pub_key = Cryptography.parsePublicKey(user_public_value, dh.getKeyFactory());
+			// Obtain Key from password
+			Cipher[] ciphers = login_util.getCipherPair(user.getPassword(), request.getChallenge_answer());
 
-			SecretKey ks = dh.establishSecretKey(request.getKey_pair().getPrivate(), cliet_pub_key);
-			
-			Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.DECRYPT_MODE, ks, tokenIssuer.getIv());
-
-			Entry<byte[], Long> e = parseMessage3(credentials, cipher);
-
-			String password = java.util.Base64.getEncoder().encodeToString(e.getKey());
-			long nonce_answer = e.getValue();
-			
-			if(password.equals(user.getPassword())) {
-
-				// Verify answer
-				if(nonce_answer == request.getChallenge_answer()) {
-
-					AuthenticationToken token = tokenIssuer.newToken(user);
-
-					cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(tokenIssuer.getIv()));
-
-					byte[] msg2 = wrapToken(token, client_nonce + 1, cipher);
-					
-					System.out.println(username + " authentication sucessful! Token valid until " + (new Date(token.getExpiration_date())).toString());
-					
-					return new RestResponse("1.0", 200, "OK", msg2);
-				} else {
-					return new RestResponse("1.0", 403, "Forbidden", ("Nonce does not match!").getBytes());
-				}
-			} else {
+			PublicKey cliet_pub_key;
+			try {
+				String client_pubKey = retrieveClientPubKey(username, request.getChallenge_answer(), Cryptography.decrypt(ciphers[1], credentials));
+				cliet_pub_key = Cryptography.parsePublicKey(client_pubKey, dh.getKeyFactory());
+			} catch (InvalidUsernameException e1) {
 				return new RestResponse("1.0", 403, "Forbidden", ("Wrong password!").getBytes());
+			} catch (WrongChallengeAnswerException e1) {
+				return new RestResponse("1.0", 403, "Forbidden", ("Nonce does not match!").getBytes());
 			}
+			
+			// Generate Key Pair
+			KeyPair	kp = dh.genKeyPair();
+			SecretKey ks = dh.establishSecretKey(kp.getPrivate(), cliet_pub_key);
+
+			// Generate new IV
+			byte[] iv = null;
+			if(tokenIssuer.useIv()) {
+				iv = Cryptography.createIV(tokenIssuer.getIv_size());
+			} else {
+				iv = new byte[0];
+			}
+
+			// Generate new token
+			AuthenticationToken token = tokenIssuer.newToken(user);
+			
+			EncryptedToken encToken = encapsulateToken(token, ks, iv, ciphers[0], client_nonce+1,  kp.getPublic());
+		
+			System.out.println( username + " logged in! Token valid until " + new Date(token.getExpiration_date()).toString());
+			
+			return new RestResponse("1.0", 200, "OK", encToken);
 		} else {
-			return new RestResponse("1.0", 403, "Forbidden", (username + " has no pedding request!").getBytes());
+			return new RestResponse("1.0", 403, "Forbidden", (username + " has no pending request!").getBytes());
 		}
 	}
 
-	private byte[] wrapToken(AuthenticationToken token, long challenge_answer, Cipher cipher) throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
+	private EncryptedToken encapsulateToken(AuthenticationToken token, SecretKey ks, byte[] iv, Cipher encCipher, long challenge_answer, PublicKey myPubKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
+		Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.ENCRYPT_MODE, ks, iv);
+		byte[] enc_token = Cryptography.encrypt(cipher, token.serialize());
+
+		byte[] server_answer = buildAnswer(challenge_answer, myPubKey, Cryptography.encrypt(encCipher, iv), encCipher);
+
+		return new EncryptedToken(enc_token, server_answer);
+	}
+
+	private byte[] buildAnswer(long challenge_answer, PublicKey pubKey, byte[] encrypted_iv, Cipher cipher) throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
 		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(byteOut);
 
-		byte[] raw_token = token.serialize();
-		dataOut.writeInt(raw_token.length);
-		dataOut.write(raw_token);
 		dataOut.writeLong(challenge_answer);
+		dataOut.writeUTF( Cryptography.encodePublicKey(pubKey));
+		dataOut.writeInt(encrypted_iv.length);
+		dataOut.write(encrypted_iv, 0, encrypted_iv.length);
 
 		dataOut.flush();
 		byteOut.flush();
@@ -161,24 +169,27 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		return Cryptography.encrypt(cipher, payload);
 	}
 
-	private Entry<byte[], Long> parseMessage3(byte[] credentials, Cipher cipher) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException {
-	
-		byte[] decrypted_credentials = Cryptography.decrypt(cipher, credentials);
-
+	private String retrieveClientPubKey(String username, long challenge_answer, byte[] decrypted_credentials) throws IOException, InvalidUsernameException, WrongChallengeAnswerException {
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(decrypted_credentials);
 		DataInputStream dataIn = new DataInputStream(byteIn);
 
-		int hash_size = dataIn.readInt();
-		
-		byte[] p_hash = new byte[hash_size];
-		dataIn.read(p_hash, 0, p_hash.length);
-
-		long nonce_answer = dataIn.readLong();
+		String recv_username = dataIn.readUTF();
+		long recv_challenge_answer = dataIn.readLong();
+		String client_pub_key = dataIn.readUTF();
 
 		dataIn.close();
 		byteIn.close();
-		
-		return new AbstractMap.SimpleEntry<byte[], Long>(p_hash, nonce_answer);
-	}
 
+		if(recv_username.equals(username)) {
+			if(recv_challenge_answer == challenge_answer) {
+				return client_pub_key;
+			} else {
+				throw new WrongChallengeAnswerException();
+			}
+		} else {
+			throw new InvalidUsernameException();
+		}
+
+	}
+	
 }

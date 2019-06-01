@@ -10,9 +10,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.util.AbstractMap;
 import java.util.Properties;
-import java.util.Map.Entry;
 
 import utility.IO;
 import utility.MyKeyStore;

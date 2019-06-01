@@ -31,17 +31,6 @@ public interface RemoteFileService {
 	String CHARSET = ";charset=utf-8";
 	
 	/**
-	 * Endpoint that allows users to authenticate themselves.
-	 * @param username user username
-	 * @param password user password
-	 * @return True if everything if correct (and a token on the authorization header), false if credentials are wrong.
-	 */
-	/*@POST
-	@Path("/login/{username}")
-	@Consumes(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean login(@PathParam("username") String username, String password);*/
-	
-	/**
 	 *  List files or directories on the specified path
 	 * @param username user username 
 	 * @param path path to list files

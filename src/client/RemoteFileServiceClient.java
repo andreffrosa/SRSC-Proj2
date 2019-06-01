@@ -6,21 +6,23 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
 
+import javax.crypto.NoSuchPaddingException;
+
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
+import fServer.authServer.DeniedAccessException;
+import fServer.authServer.ExpiredTokenException;
+import fServer.authServer.WrongChallengeAnswerException;
 import fServer.mainDispatcher.RemoteFileService;
-import fServer.storageServer.StorageService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
-import utility.ArrayUtil;
-import utility.IO;
+import utility.LoginUtility;
 import utility.RequestHandler;
 
 public class RemoteFileServiceClient{
@@ -29,16 +31,14 @@ public class RemoteFileServiceClient{
 	private String location;
 	private mySecureRestClient client;
 	private AuthenticationToken authToken;
-	MessageDigest hash;
-	private byte[] iv;
+	private LoginUtility login_util; 
 
-	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, byte[] iv, MessageDigest hash)
+	public RemoteFileServiceClient(KeyStore ks, String ks_password, KeyStore ts, String location, LoginUtility login_util)
 			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
 		this.location = location;
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 		this.authToken = null;
-		this.iv = iv;
-		this.hash = hash;
+		this.login_util = login_util;
 	}
 
 	private <K, T> T processRequest(RequestHandler<String, T> requestHandler) {
@@ -61,22 +61,14 @@ public class RemoteFileServiceClient{
 		throw new RuntimeException("Aborted request! Too many tries...");
 	}
 
-	public boolean login(String username, String password) {
+	public boolean login(String username, String password) throws ExpiredTokenException, WrongChallengeAnswerException, DeniedAccessException {
 
-		/*return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addPathParam("login").addPathParam(username).post(password);
-
-			if (response.getStatusCode() == 200) {
-				return (boolean) response.getEntity(boolean.class);
-			} else
-				throw new RuntimeException("login: " + response.getStatusCode());
-		});*/
-
-		// TODO: O que fazer às excepções?
 		try {
-			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, hash, iv);
+			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, login_util);
 
 			return true;
+		} catch(ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
+			throw e;
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

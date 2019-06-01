@@ -46,6 +46,7 @@ import ssl.CustomSSLSocketFactory;
 import utility.ArrayUtil;
 import utility.Cryptography;
 import utility.IO;
+import utility.LoginUtility;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
 
@@ -56,9 +57,6 @@ public class LocalAuthTest {
 		//SecureRandom sr = SecureRandom.getInstance("sha1PRNG");
 
 		//      generate the key bytes
-		MessageDigest	hash = MessageDigest.getInstance("SHA512", "BC");
-
-
 
 		//////////////////////////////////////////////////////////////////
 		String location = "https://localhost:8050/";
@@ -80,9 +78,9 @@ public class LocalAuthTest {
 		SocketFactory factory = new CustomSSLSocketFactory(kstore, ks_password, ts);
 		mySecureRestClient client = new mySecureRestClient(factory, location);
 		
-		byte[] iv = ArrayUtil.unparse(IO.loadProperties("./configs/client/iv.conf").getProperty("IV"));
+		LoginUtility login_util = LoginUtility.fromConfig("./configs/client/login.conf");
 		
-		AuthenticationToken token = AuthenticationClient.login(client, AuthenticatorService.PATH, username, password, hash, iv);
+		AuthenticationToken token = AuthenticationClient.login(client, AuthenticatorService.PATH, username, password, login_util);
 		
 		System.out.println(token);
 		System.out.println(java.util.Base64.getEncoder().encodeToString(token.getSignature()));

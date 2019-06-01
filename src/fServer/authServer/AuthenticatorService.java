@@ -38,9 +38,9 @@ public interface AuthenticatorService {
 	public RestResponse requestSession(@PathParam("username") String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException;
 	
 	@POST
-	@Path("/requestToken/{username}/{user_public_value}")
+	@Path("/requestToken/{username}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM + CHARSET)
-	@Produces(MediaType.APPLICATION_OCTET_STREAM + CHARSET)
-	public RestResponse requestToken(@PathParam("username") String username, @PathParam("user_public_value") String user_public_value, @QueryParam("client_nonce") long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException, DeniedAccessException;
+	@Produces(MediaType.APPLICATION_JSON + CHARSET)
+	public RestResponse requestToken(@PathParam("username") String username, @QueryParam("client_nonce") long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException, DeniedAccessException;
 	
 }
