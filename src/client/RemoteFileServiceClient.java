@@ -119,7 +119,12 @@ public class RemoteFileServiceClient{
 
 	public boolean upload(String username, String path, byte[] data) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("put").addPathParam(username).addPathParam(path).post(data);
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("put")
+					.addPathParam(username)
+					.addPathParam(path)
+					.put(data);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -148,12 +153,13 @@ public class RemoteFileServiceClient{
 
 	public boolean copy(String username, String origin, String dest) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64())
-					.addPathParam("copy")
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("cp")
 					.addPathParam(username)
 					.addPathParam(origin)
 					.addPathParam(dest)
-					.post(null);
+					.put(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);

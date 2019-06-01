@@ -170,25 +170,54 @@ public class ConsoleClient {
 
 	private static void copy(String current_path, Scanner in) {
 
-		String fileName = IO.resolvePath(current_path, in.next());
+		String src = IO.resolvePath(current_path, in.next());
 		String dest = IO.resolvePath(current_path, in.nextLine());
-		client.copy(username, String.format("%s/%s", current_path, fileName), String.format("/%s/%s", username, dest));
+		
+		client.copy(username, src, dest);
 	}
 
 	private static void download(String current_path, Scanner in) throws IOException {
-		String fileName = IO.resolvePath(current_path, in.nextLine());
+		
+		String remote_file = IO.resolvePath(current_path, in.next().trim());
+		String local_file = IO.resolvePath(LOCAL_STORAGE, in.nextLine().trim());
+		
+		byte[] data = client.download(username, remote_file);
+
+		if (data != null)
+			Files.write(Paths.get(local_file), data);
+		else
+			System.out.println("File not found");
+		
+		/*String fileName = IO.resolvePath(current_path, in.nextLine());
 		Path localFilePath = Paths.get(LOCAL_STORAGE, fileName);
 		byte[] data = client.download(username, String.format("%s/%s", current_path, fileName));
 
 		if (data != null)
 			Files.write(localFilePath, data);
 		else
-			System.out.println("File not found");
+			System.out.println("File not found");*/
 	}
 
 	private static void upload(String current_path, Scanner in) {
 
-		String fileName = IO.resolvePath("./", in.nextLine());
+		String local_file = IO.resolvePath(LOCAL_STORAGE, in.next().trim());
+		String remote_file = IO.resolvePath(current_path, in.nextLine().trim());
+		
+		System.out.println(local_file);
+		System.out.println(remote_file);
+		byte[] data = null;
+		try {
+			Path p = Paths.get(local_file);
+			if (Files.exists(p) && Files.isReadable(p))
+				data = Files.readAllBytes(p);
+			
+			client.upload(username, remote_file, data);
+		} catch (IOException e) {
+			System.out.println("Could Not Found File " + local_file);
+		}
+		
+		
+		/*String fileName = IO.resolvePath("./", in.nextLine());
 		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
 		byte[] data = null;
 		try {
@@ -200,7 +229,8 @@ public class ConsoleClient {
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + fileName);
 		}
-
+*/
+		
 	}
 
 	private static void mkdir(String current_path, Scanner in) {

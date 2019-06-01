@@ -75,9 +75,9 @@ public interface StorageService {
 	 * @return True if everything went correctly or false if the file was not copied.
 	 */
 	@PUT
-	@Path("/cp/{username}")
+	@Path("/cp/{username}/{src}/{dest}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public boolean copy(@HeaderParam("Authorization") String token, @PathParam("username") String username, @QueryParam("origin") String origin, @QueryParam("dest") String dest);
+	public boolean copy(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("src") String src, @PathParam("dest") String dest);
 	
 	/**
 	 * Removes a file that resides on the specified path.

@@ -169,11 +169,11 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 			return	client.setLocation(storage_server_location)
 					.newRequest(StorageService.PATH)
 					.addHeader("Authorization", auth.getBase64())
-					.addPathParam("copy")
+					.addPathParam("cp")
 					.addPathParam(username)
 					.addPathParam(origin)
 					.addPathParam(dest)
-					.post(null);
+					.put(null);
 		});	
 	}
 

@@ -94,7 +94,7 @@ public class AccessControllerImplementation implements AccessControler {
 		else
 			result = canRead(username);
 		
-		System.out.print( username + " has access to " + operation  + "? " + (result ? "granted" : "denied"));
+		System.out.println( username + " has access to " + operation  + "? " + (result ? "granted" : "denied"));
 		
 		return result;
 	}
