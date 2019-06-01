@@ -31,9 +31,11 @@ import utility.Cryptography;
 
 public class AuthenticationClient {
 	
-	public static RestResponse get_requestSession(mySecureRestClient client, String resource_path, String username) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
-		return client.newRequest(resource_path).addPathParam("requestSession")
-				.addPathParam(username).get();
+	public static RestResponse get_requestSession(mySecureRestClient client, String username, String resource_path) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		return client.newRequest(resource_path)
+				.addPathParam("requestSession")
+				.addPathParam(username)
+				.get();
 	}
 	
 	public static SessionEstablishmentParameters requestSession(mySecureRestClient client, String resource_path, String username) throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
