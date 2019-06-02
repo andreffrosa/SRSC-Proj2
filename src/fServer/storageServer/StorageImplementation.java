@@ -9,12 +9,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
+import fServer.authServer.AuthenticationToken;
 import fServer.authServer.TokenVerifier;
 import rest.RestResponse;
 
@@ -27,32 +31,51 @@ import rest.RestResponse;
 public class StorageImplementation implements StorageService {
 
 	private TokenVerifier tokenVerifier;
+	private String dbPath;
 	
 	//TODO: all syncronized
 	//TODO: O que significa tabelas no enunciado	
-	public StorageImplementation(TokenVerifier tokenVerifier) {
+	public StorageImplementation(String dbPath, TokenVerifier tokenVerifier) {
 		this.tokenVerifier = tokenVerifier;
+		this.dbPath = dbPath;
 	}
 
 	@Override
-	public RestResponse listFiles(String token, String username, String path) {
-
+	public RestResponse listFiles(String token, String username, String path) throws IOException, InvalidKeyException, SignatureException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		Path dirPath = buildPath(username, path);
 		return new RestResponse("1.0", Status.OK.getStatusCode(), "Sending list", listFiles(dirPath)) ;
 		
 	}
 
 	@Override
-	public RestResponse mkdir(String token, String username, String path) {
-
+	public RestResponse mkdir(String token, String username, String path) throws InvalidKeyException, SignatureException, IOException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		Path dirPath = buildPath(username, path);
 		return new  RestResponse("1.0", Status.OK.getStatusCode(), "OK", new File(dirPath.toString()).mkdirs());
 	}
 
-	//TODO: Create metadata
 	@Override
-	public RestResponse upload(String token, String username, String path, byte[] data) {
-
+	public RestResponse upload(String token, String username, String path, byte[] data) throws IOException, InvalidKeyException, SignatureException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		try {
 
 			Path filePath = buildPath(username, path);
@@ -65,8 +88,14 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public RestResponse download(String token, String username, String path) {
-
+	public RestResponse download(String token, String username, String path) throws IOException, InvalidKeyException, SignatureException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		try {
 			Path filePath = buildPath(username, path);
 			if(Files.exists(filePath) && Files.isReadable(filePath)) 
@@ -77,8 +106,14 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public RestResponse copy(String token, String username, String origin, String dest) {
-
+	public RestResponse copy(String token, String username, String origin, String dest) throws InvalidKeyException, SignatureException, IOException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		Path originPath = buildPath(username, origin);
 		Path destPath = buildPath(username, dest);
 
@@ -96,8 +131,14 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public RestResponse remove(String token, String username, String path) {
-
+	public RestResponse remove(String token, String username, String path) throws IOException, InvalidKeyException, SignatureException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		Path filePath = buildPath(username, path);
 
 		try {
@@ -109,7 +150,13 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public RestResponse removeDirectory(String token, String username, String path) {
+	public RestResponse removeDirectory(String token, String username, String path) throws InvalidKeyException, SignatureException, IOException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
 		
 		Path dirPath = buildPath(username, path);
 		if(listFiles(dirPath).size() > 0)
@@ -118,7 +165,7 @@ public class StorageImplementation implements StorageService {
 		try {
 
 			Files.delete(dirPath);
-			return new RestResponse("1.0", 200, "OK", false);
+			return new RestResponse("1.0", 200, "OK", true);
 
 		} catch (IOException e) {
 			return new RestResponse("1.0", 200, "OK", false);
@@ -127,15 +174,25 @@ public class StorageImplementation implements StorageService {
 	}
 
 	@Override
-	public RestResponse getFileMetadata(String token, String username, String path) {
-
+	public RestResponse getFileMetadata(String token, String username, String path) throws IOException, InvalidKeyException, SignatureException {
+		
+		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			System.out.println("User " + username + " presented invalid token");
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
+		}
+		
 		Path filePath = buildPath(username, path);
 		try {
-			if(Files.exists(filePath))
-				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", Files.readAttributes(filePath, BasicFileAttributes.class));
-
+			if(Files.exists(filePath)) {
+				int idx = path.lastIndexOf(".");
+				String ext =  idx > 0 ? path.substring(idx) : "-";
+				BasicFileAttributes bfa =  Files.readAttributes(filePath, BasicFileAttributes.class);
+				String metadata = String.format("%s\t%s\t%s\tCreated on: %s\tLast Access on: %s\n", path, bfa.isDirectory() ? "D" : "F", ext , new Date(bfa.creationTime().toMillis()), new Date( bfa.lastModifiedTime().toMillis()));
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", metadata);
+			}
 		}catch(IOException e){	}
-		return new RestResponse("1.0", 200, "OK", null);
+		return new RestResponse("1.0", Status.NOT_FOUND.getStatusCode(), "NOT FOUND", null);
 	}
 
 	private Path buildPath(String username, String path) {
@@ -144,7 +201,7 @@ public class StorageImplementation implements StorageService {
 		if(path == null) path = "";
 
 		//build path
-		Path dirPath = Paths.get(username, path);
+		Path dirPath = Paths.get(dbPath, username, path);
 		return dirPath;
 	}
 	

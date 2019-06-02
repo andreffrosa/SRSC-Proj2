@@ -9,10 +9,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.ws.rs.core.Response.Status;
+
 import java.util.Properties;
 
 import fServer.authServer.AuthenticationToken;
 import fServer.authServer.TokenVerifier;
+import rest.RestResponse;
 
 public class AccessControllerImplementation implements AccessControler {
 
@@ -79,24 +83,28 @@ public class AccessControllerImplementation implements AccessControler {
 	}
 
 	@Override
-	public boolean hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
+	public RestResponse hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
 		
 		AuthenticationToken auth = AuthenticationToken.parseToken(token);
 		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
 			System.out.println("User " + username + " presented invalid token");
-			return false;
+			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
 		}
 		
 		boolean result = false;
 		
-		if(operation.equals(AccessControler.WRITE_ACCESS_REQUEST))
+		if(operation.equals(AccessControler.WRITE_ACCESS_REQUEST)) {
 			result = canWrite(username);
-		else
+		}else
 			result = canRead(username);
 		
 		System.out.println( username + " has access to " + operation  + "? " + (result ? "granted" : "denied"));
 		
-		return result;
+		if(result)
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
+		else
+			return new RestResponse("1.0",Status.FORBIDDEN.getStatusCode(), "Forbidden", "Permission Denied");
+	
 	}
 
 }

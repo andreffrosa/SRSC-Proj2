@@ -20,6 +20,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.net.SocketFactory;
+import javax.ws.rs.core.Response.Status;
 
 import fServer.accessControlServer.AccessControler;
 import fServer.authServer.AuthenticationClient;
@@ -94,10 +95,11 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 						.addPathParam(auth.getUsername())
 						.get();
 
-				if (response.getStatusCode() == 200) {
-					System.out.println(new String( response.getHTTPReply().serialize()));
-					return (boolean) response.getEntity(boolean.class);
-				} else
+				if (response.getStatusCode() == Status.OK.getStatusCode())
+					return true;
+				else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode()) 
+					return false;
+				else	
 					throw new RuntimeException("Acess Request: " + response.getStatusCode());
 			});
 

@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import http.MediaType;
+import rest.RestResponse;
 
 @Path(AccessControler.PATH)
 public interface AccessControler {
@@ -30,6 +31,6 @@ public interface AccessControler {
 	@GET
 	@Path("/{operation}/{username}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public boolean hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException;
+	public RestResponse hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException;
 		
 }

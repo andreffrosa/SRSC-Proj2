@@ -87,10 +87,10 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 
 				return new RestResponse("1.0", 200, "OK", params);
 			} else {
-				return new RestResponse("1.0", 403, "Forbidden", (username + " is blocked!").getBytes());
+				return new RestResponse("1.0", 403, "Forbidden", (username + " is blocked!"));
 			}
 		} else {
-			return new RestResponse("1.0", 403, "Forbidden", (username + " is not registered!").getBytes());
+			return new RestResponse("1.0", 403, "Forbidden", (username + " is not registered!"));
 		}
 	}
 
@@ -112,7 +112,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			} catch (InvalidUsernameException e1) {
 				return new RestResponse("1.0", 403, "Forbidden", ("Wrong password!").getBytes());
 			} catch (WrongChallengeAnswerException e1) {
-				return new RestResponse("1.0", 403, "Forbidden", ("Nonce does not match!").getBytes());
+				return new RestResponse("1.0", 403, "Forbidden", ("Nonce does not match!"));
 			}
 			
 			// Generate Key Pair
@@ -136,7 +136,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			
 			return new RestResponse("1.0", 200, "OK", encToken);
 		} else {
-			return new RestResponse("1.0", 403, "Forbidden", (username + " has no pending request!").getBytes());
+			return new RestResponse("1.0", 403, "Forbidden", (username + " has no pending request!"));
 		}
 	}
 

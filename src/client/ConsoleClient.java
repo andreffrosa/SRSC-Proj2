@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -148,22 +147,22 @@ public class ConsoleClient {
 	}
 
 	private static void getFileData(String current_path, Scanner in) {
-		String fileName = IO.resolvePath(current_path, in.nextLine());
-		BasicFileAttributes bfa = client.getFileMetadata(username, String.format("%s/%s", current_path, fileName));
+		String fileName = IO.resolvePath(current_path, in.nextLine().trim());
+		String bfa = client.getFileMetadata(username, fileName);
 		if(bfa != null) {
 			System.out.println(bfa.toString()); //check if this is good
 		}
 	}
 
 	private static void rmDir(String current_path, Scanner in) {
-		String dirName = IO.resolvePath(current_path, in.nextLine());
-		if(!client.removeDirectory(username, String.format("%s/%s", current_path, dirName)))
+		String dirName = IO.resolvePath(current_path, in.nextLine().trim());
+		if(!client.removeDirectory(username, dirName))
 			System.out.println("Error Deleting file: " + dirName);
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
-		String fileNameString = IO.resolvePath(current_path, in.nextLine());
-		if(!client.remove(username, String.format("%s/%s", current_path, fileNameString)))
+		String fileNameString = IO.resolvePath(current_path, in.nextLine().trim());
+		if(!client.remove(username, fileNameString))
 			System.out.println("Error Deliting file: " + fileNameString);
 
 	}
@@ -290,7 +289,7 @@ public class ConsoleClient {
 			return null;
 		}
 
-		return result ? username : null;
+		return result ? client.getToken().getUsername() : null;
 	}
 
 }
