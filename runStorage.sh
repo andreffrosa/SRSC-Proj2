@@ -9,5 +9,6 @@ PORT="9999"
 TLS="./configs/fServer/servertls.conf"
 KEYSTORE="./configs/fServer/storageServer/keystores.conf"
 TOKEN="./configs/fServer/token_verification.conf"
+DB="./Drive"
 
-$JAVA $JAVA_ARGS $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $TOKEN $@
+$JAVA $JAVA_ARGS $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $TOKEN $DB $@

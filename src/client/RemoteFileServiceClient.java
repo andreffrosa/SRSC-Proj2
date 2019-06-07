@@ -2,7 +2,6 @@ package client;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -10,8 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
-
-import javax.crypto.NoSuchPaddingException;
 
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticationToken;
@@ -74,10 +71,6 @@ public class RemoteFileServiceClient{
 		}
 
 		return false;
-	}
-	
-	public AuthenticationToken getToken() {
-		return this.authToken;
 	}
 	
 	// TODO: Colocar na interface?
@@ -157,52 +150,72 @@ public class RemoteFileServiceClient{
 
 	public boolean copy(String username, String origin, String dest) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+			
+			RestResponse response= client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addPathParam("cp")
 					.addPathParam(username)
 					.addPathParam(origin)
 					.addPathParam(dest)
 					.put(null);
-
+									
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
-			} else
+			} else 
 				throw new RuntimeException("cp: " + response.getStatusCode());
 		});
 	}
 
 	public boolean remove(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rm").addPathParam(username).addPathParam(path).delete(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("rm")
+					.addPathParam(username)
+					.addPathParam(path)
+					.delete(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
 			} else
-				throw new RuntimeException("cp: " + response.getStatusCode());
+				throw new RuntimeException("rm: " + response.getStatusCode());
 		});
 	}
 
 	public boolean removeDirectory(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("rmDir").addPathParam(username).addPathParam(path).delete(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("rmdir")
+					.addPathParam(username)
+					.addPathParam(path)
+					.delete(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
 			} else
-				throw new RuntimeException("cp: " + response.getStatusCode());
+				throw new RuntimeException("rmDir: " + response.getStatusCode());
 		});
 	}
 
-	public BasicFileAttributes getFileMetadata(String username, String path) {
+	public String getFileMetadata(String username, String path) {
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("file").addPathParam(username).addPathParam(path).get();
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addPathParam("file")
+					.addPathParam(username)
+					.addPathParam(path)
+					.get();
 
 			if (response.getStatusCode() == 200) {
-				return (BasicFileAttributes) response.getEntity(BasicFileAttributes.class);
+				return (String) response.getEntity(String.class);
 			} else
-				throw new RuntimeException("cp: " + response.getStatusCode());
+				throw new RuntimeException("file: " + response.getStatusCode());
 		});	
+	}
+	
+	public AuthenticationToken getToken() {
+		return authToken;
 	}
 
 }

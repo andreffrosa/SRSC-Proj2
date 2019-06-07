@@ -11,8 +11,8 @@ import utility.TLS_Utils;
 public class StorageServer {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
-			System.err.println("Usage: AccessControlServer <port> <tls-configs> <keystore-configs> <token-verification>");
+		if (args.length < 5) {
+			System.err.println("Usage: AccessControlServer <port> <tls-configs> <keystore-configs> <token-verification> <dbPath>");
 			System.exit(-1);
 		}
 
@@ -30,7 +30,7 @@ public class StorageServer {
 		TokenVerifier tokenVerifier = TokenVerifier.getVerifier(token_verif);
 
 		// Create Service Handler
-		StorageImplementation storage = new StorageImplementation(tokenVerifier);
+		StorageImplementation storage = new StorageImplementation(args[4], tokenVerifier);
 
 		// Create HTTPS Server
 		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);

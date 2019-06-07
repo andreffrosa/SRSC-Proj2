@@ -20,6 +20,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.net.SocketFactory;
+import javax.ws.rs.core.Response.Status;
 
 import fServer.accessControlServer.AccessControler;
 import fServer.authServer.AuthenticationClient;
@@ -33,8 +34,9 @@ import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
 import utility.RequestHandler;
 
-public class MainDispatcherImplementation implements RemoteFileService, AuthenticatorService {
+public class MainDispatcherImplementation implements RemoteFileService, AuthenticatorService, StorageService {
 
+	
 	private static final int MAX_TRIES = 3;
 
 	private TokenVerifier tokenVerifier;
@@ -93,16 +95,18 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 						.addPathParam(auth.getUsername())
 						.get();
 
-				if (response.getStatusCode() == 200) {
-					System.out.println(new String( response.getHTTPReply().serialize()));
-					return (boolean) response.getEntity(boolean.class);
-				} else
+				if (response.getStatusCode() == Status.OK.getStatusCode())
+					return true;
+				else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode()) 
+					return false;
+				else	
 					throw new RuntimeException("Acess Request: " + response.getStatusCode());
 			});
 
-			if(hasAccess)	
+			if(hasAccess)	{
+				System.out.println("Issuing request");
 				return requestHandler.execute(auth);
-			else
+			}else
 				return new RestResponse("1.0", 403, "Forbidden", String.format("%s has no permissions to %s\n.", auth.getUsername(), opType));
 		} else {
 			return new RestResponse("1.0", 403, "Forbidden", "token is expired!".getBytes());
