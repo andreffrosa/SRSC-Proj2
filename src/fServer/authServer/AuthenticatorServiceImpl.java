@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,7 +49,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		this.authentication_table = authentication_table;
 		this.tokenIssuer = tokenIssuer;
 		this.login_util = login_util;
-		this.pending_requests = new ConcurrentHashMap<>();
+		this.pending_requests = new HashMap<>();
 		startGarbageCollector();
 	}
 
@@ -63,14 +64,18 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 				}
 
 				long current_time = System.currentTimeMillis();
-				pending_requests.entrySet().removeIf(entry -> entry.getValue().getExpiration_date() < current_time);
+				GC_clean(current_time);
 			}
 		}).start();
 
 	}
+	
+	private synchronized void GC_clean(long current_time) {
+		pending_requests.entrySet().removeIf(entry -> entry.getValue().getExpiration_date() < current_time);
+	}
 
 	@Override
-	public RestResponse requestSession(String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+	public synchronized RestResponse requestSession(String username) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
 
 		User user = authentication_table.get(username);
 		if(user != null) {
@@ -95,7 +100,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 	}
 
 	@Override
-	public RestResponse requestToken(String username, long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException {
+	public synchronized RestResponse requestToken(String username, long client_nonce, byte[] credentials) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IOException, SignatureException {
 
 		SessionPendingRequest request = this.pending_requests.get(username);
 
@@ -140,7 +145,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		}
 	}
 
-	private EncryptedToken encapsulateToken(AuthenticationToken token, SecretKey ks, byte[] iv, Cipher encCipher, long challenge_answer, PublicKey myPubKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
+	private synchronized EncryptedToken encapsulateToken(AuthenticationToken token, SecretKey ks, byte[] iv, Cipher encCipher, long challenge_answer, PublicKey myPubKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
 		Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.ENCRYPT_MODE, ks, iv);
 		byte[] enc_token = Cryptography.encrypt(cipher, token.serialize());
 
@@ -149,7 +154,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		return new EncryptedToken(enc_token, server_answer);
 	}
 
-	private byte[] buildAnswer(long challenge_answer, PublicKey pubKey, byte[] encrypted_iv, Cipher cipher) throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
+	private synchronized byte[] buildAnswer(long challenge_answer, PublicKey pubKey, byte[] encrypted_iv, Cipher cipher) throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
 		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(byteOut);
 

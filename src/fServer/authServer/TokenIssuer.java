@@ -11,6 +11,8 @@ import java.security.NoSuchProviderException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import utility.IO;
@@ -60,8 +62,12 @@ public class TokenIssuer {
 
 	public AuthenticationToken newToken(User user) throws InvalidKeyException, SignatureException, IOException {
 		String username = user.getUsername();
-		long expiration_date = System.currentTimeMillis() + token_ttl;
-		return AuthenticationToken.newToken(username, expiration_date, null, sig, kp.getPrivate());
+		long current_date = System.currentTimeMillis();
+		long expiration_date = current_date + token_ttl;
+		Map<String,String> attrs = new HashMap<>();
+		attrs.put("Issued on", ""+current_date);
+		attrs.put("name", user.getName());
+		return AuthenticationToken.newToken(username, expiration_date, attrs, sig, kp.getPrivate());
 	}
 	
 	public static TokenIssuer fromConfigFile(String config) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {

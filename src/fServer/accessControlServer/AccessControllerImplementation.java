@@ -58,7 +58,7 @@ public class AccessControllerImplementation implements AccessControler {
 		}
 	}
 		
-	private boolean canRead(String username) {
+	private synchronized boolean canRead(String username) {
 
 		if(permissionsMap.containsKey(username)) 
 			if(permissionsMap.get(username)[READ_POS]) {
@@ -68,7 +68,7 @@ public class AccessControllerImplementation implements AccessControler {
 		return false;
 	}
 
-	private boolean canWrite(String username) {
+	private synchronized boolean canWrite(String username) {
 		
 		if(permissionsMap.containsKey(username))
 			if(permissionsMap.get(username)[WRITE_POS]) {		
@@ -79,7 +79,7 @@ public class AccessControllerImplementation implements AccessControler {
 	}
 
 	@Override
-	public boolean hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
+	public synchronized boolean hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
 		
 		AuthenticationToken auth = AuthenticationToken.parseToken(token);
 		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {

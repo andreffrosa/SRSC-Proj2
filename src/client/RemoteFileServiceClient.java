@@ -75,7 +75,11 @@ public class RemoteFileServiceClient{
 
 		return false;
 	}
-
+	
+	public AuthenticationToken getToken() {
+		return this.authToken;
+	}
+	
 	// TODO: Colocar na interface?
 	public boolean logout() {
 		if(this.authToken!=null) {
