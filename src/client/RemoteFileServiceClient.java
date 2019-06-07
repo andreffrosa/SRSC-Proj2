@@ -95,7 +95,6 @@ public class RemoteFileServiceClient{
 					.get();
 
 			if (response.getStatusCode() == 200) {
-				System.out.println(new String( response.getHTTPReply().serialize()));
 				return (List<String>) response.getEntity(List.class);
 			} else
 				throw new RuntimeException("ls: " + response.getStatusCode());
@@ -110,7 +109,7 @@ public class RemoteFileServiceClient{
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
 			} else
-				throw new RuntimeException("ls: " + response.getStatusCode());
+				throw new RuntimeException("mkdir: " + response.getStatusCode());
 		});
 	}
 
@@ -194,7 +193,7 @@ public class RemoteFileServiceClient{
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
 			} else
-				throw new RuntimeException("rmDir: " + response.getStatusCode());
+				throw new RuntimeException("rmdir: " + response.getStatusCode());
 		});
 	}
 
