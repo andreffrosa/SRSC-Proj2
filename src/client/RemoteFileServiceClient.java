@@ -45,13 +45,10 @@ public class RemoteFileServiceClient{
 				return requestHandler.execute(location);
 			} catch (Exception e) {
 				e.printStackTrace();
-				//if (e.getMessage().contains("java.net.ConnectException")
-				//		|| e.getMessage().contains("java.net.SocketTimeoutException")) {
+				if (e.getMessage().contains("java.net.ConnectException")
+						|| e.getMessage().contains("java.net.SocketTimeoutException")) {
 				System.out.println(String.format("Error contacting server %s .... retry: %d", location, current_try));
-				/*} else {
-					e.printStackTrace();
-					throw new RuntimeException(e.getMessage());
-				}*/
+				} 
 			}
 		}
 
