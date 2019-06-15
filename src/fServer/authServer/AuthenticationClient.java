@@ -60,13 +60,13 @@ public class AuthenticationClient {
 				.post(credentials);
 	}
 
-	public static EncryptedToken requestToken(mySecureRestClient client, String resource_path, String username, long client_nonce, byte[] credentials)
+	public static EnvelopedToken requestToken(mySecureRestClient client, String resource_path, String username, long client_nonce, byte[] credentials)
 			throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
 
 		RestResponse response = post_requestToken(client, resource_path, username, client_nonce, credentials);
 
 		if (response.getStatusCode() == 200) {
-			return (EncryptedToken) response.getEntity(EncryptedToken.class);
+			return (EnvelopedToken) response.getEntity(EnvelopedToken.class);
 		} else if (response.getStatusCode() == 403) {
 			String message = (String) response.getEntity(String.class);
 			throw new DeniedAccessException(message);
@@ -100,24 +100,18 @@ public class AuthenticationClient {
 
 		// Request Token
 		long client_nonce = Cryptography.genNonce(sr);
-		EncryptedToken encToken = requestToken(client, resource_path, username, client_nonce, credentials);
 		
-		byte[] server_ans = Cryptography.decrypt(ciphers[1], encToken.getServer_answer());
+		EnvelopedToken envToken = requestToken(client, resource_path, username, client_nonce, credentials);
+		
+		byte[] server_ans = Cryptography.decrypt(ciphers[1], envToken.getServer_answer());
 		Entry<String, byte[]> e = retrieveServerPubKey(server_ans, client_nonce+1);
-
 		PublicKey server_pub_key = Cryptography.parsePublicKey(e.getKey(), dh_local.getKeyFactory());
-
 		SecretKey ks = dh_local.establishSecretKey(myKeyPair.getPrivate(), server_pub_key);
+		byte[] iv = e.getValue();
 
-		byte[] iv = Cryptography.decrypt(ciphers[1], e.getValue());
+		Cipher cipher = Cryptography.buildCipher(msg1.getEncryption_algorithm(), Cipher.DECRYPT_MODE, ks, iv, msg1.getProvider());
 
-		Cipher cipher = Cipher.getInstance(msg1.getEncryption_algorithm(), msg1.getProvider());
-		if(iv.length > 0)
-			cipher.init(Cipher.DECRYPT_MODE, ks, new IvParameterSpec(iv));
-		else
-			cipher.init(Cipher.DECRYPT_MODE, ks);
-
-		AuthenticationToken token = AuthenticationToken.parseToken(Cryptography.decrypt(cipher, encToken.getToken()));
+		AuthenticationToken token = AuthenticationToken.parseToken(envToken.getToken(), cipher);
 
 		if (!token.isExpired(System.currentTimeMillis()))
 			return token;

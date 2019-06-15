@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -15,6 +16,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SecretKey;
+import javax.crypto.ShortBufferException;
+
+import utility.ArrayUtil;
 import utility.Cryptography;
 
 public class AuthenticationToken {
@@ -24,15 +32,27 @@ public class AuthenticationToken {
 	private long expiration_date;
 	private byte[] signature;
 	private byte[] payload;
-	Map<String,String> additional_attributes;
+	private byte[] encrypted_private_attributes;
+	private Map<String,String> additional_public_attributes;
+	private Map<String,String> additional_private_attributes;
 
-	private AuthenticationToken(String username, long expiration_date, byte[] payload, byte[] signature, Map<String, String> additional_attributes) throws IOException {
+	private AuthenticationToken(String username, long expiration_date, byte[] payload, byte[] signature, byte[] encrypted_private_attributes, Map<String, String> additional_public_attributes, Map<String, String> additional_private_attributes) throws IOException {
 		this.username = username;
 		this.expiration_date = expiration_date;
 		this.payload = payload;
 		this.signature = signature;
-		this.additional_attributes = additional_attributes;
+		this.encrypted_private_attributes = encrypted_private_attributes;
+		this.additional_public_attributes = additional_public_attributes;
+		this.additional_private_attributes = additional_private_attributes;
 		encodeToken = encodeToBase64( );
+	}
+	
+	public byte[] getEncrypted_private_attributes() {
+		return encrypted_private_attributes;
+	}
+
+	public Map<String, String> getAdditional_private_attributes() {
+		return additional_private_attributes;
 	}
 
 	private String encodeToBase64() throws IOException {
@@ -60,7 +80,7 @@ public class AuthenticationToken {
 	}
 
 	public Map<String, String> getAdditional_attributes() {
-		return additional_attributes;
+		return additional_public_attributes;
 	}
 	
 	@Override
@@ -70,7 +90,7 @@ public class AuthenticationToken {
 		s.append(':');
 		s.append(expiration_date);
 		
-		for(Entry<String,String> e : additional_attributes.entrySet()) {
+		for(Entry<String,String> e : additional_public_attributes.entrySet()) {
 			s.append(':');
 			s.append(e.getKey());
 			s.append('=');
@@ -115,11 +135,11 @@ public class AuthenticationToken {
 		return raw_token;
 	}
 	
-	public static AuthenticationToken parseToken(String base64_token) throws IOException {
-		return parseToken(java.util.Base64.getDecoder().decode(base64_token));
+	public static AuthenticationToken parseToken(String base64_token, Cipher decryptCipher) throws IOException, InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException {
+		return parseToken(java.util.Base64.getDecoder().decode(base64_token), decryptCipher);
 	}
 
-	public static AuthenticationToken parseToken(byte[] raw_token) throws IOException {
+	public static AuthenticationToken parseToken(byte[] raw_token, Cipher decryptCipher) throws IOException, InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException {
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(raw_token);
 		DataInputStream dataIn = new DataInputStream(byteIn);
 
@@ -140,36 +160,62 @@ public class AuthenticationToken {
 		String username = dataIn.readUTF();
 		long expiration_date = dataIn.readLong();
 
-		int n_attributes = dataIn.readInt();
-		
-		Map<String,String> additional_attributes = new HashMap<>(n_attributes);
-		for(int i = 0; i < n_attributes; i++) {
+		int n_public_attributes = dataIn.readInt();
+		Map<String,String> additional_public_attributes = new HashMap<>(n_public_attributes);
+		for(int i = 0; i < n_public_attributes; i++) {
 			String key = dataIn.readUTF();
 			String value = dataIn.readUTF();
-			additional_attributes.put(key, value);
+			additional_public_attributes.put(key, value);
 		}
-
+		
+		int len = dataIn.readInt();
+		byte[] encrypted_private_attributes = new byte[len];
+		dataIn.read(encrypted_private_attributes, 0, len);
+		
 		dataIn.close();
 		byteIn.close();
+		
+		Map<String,String> additional_private_attributes = null;
+		if(decryptCipher != null) {
+			byte[] decrypted_private_attributes = Cryptography.decrypt(decryptCipher, encrypted_private_attributes);
+			byteIn = new ByteArrayInputStream(decrypted_private_attributes);
+			dataIn = new DataInputStream(byteIn);
+			
+			int size = dataIn.readInt();
+			additional_private_attributes = new HashMap<String, String>(size);
+			for(int i = 0; i < size; i++) {
+				String key = dataIn.readUTF();
+				String value = dataIn.readUTF();
+				additional_private_attributes.put(key, value);
+			}
+			
+			dataIn.close();
+			byteIn.close();
+		}
 
-		return new AuthenticationToken(username, expiration_date, payload, signature, additional_attributes);
+
+		return new AuthenticationToken(username, expiration_date, payload, signature, encrypted_private_attributes, additional_public_attributes, additional_private_attributes);
 	}
 
-	public static AuthenticationToken newToken(String username, long expiration_date, Map<String,String> additional_attributes, Signature sig, PrivateKey privKey) throws InvalidKeyException, SignatureException, IOException {
+	public static AuthenticationToken newToken(String username, long expiration_date, Map<String,String> additional_public_attributes, Map<String,String> additional_private_attributes, Signature sig, PrivateKey privKey, Cipher encryptCipher) throws InvalidKeyException, SignatureException, IOException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
 
-		additional_attributes = (additional_attributes == null) ? new HashMap<>(1) : additional_attributes;
+		additional_public_attributes = (additional_public_attributes == null) ? new HashMap<>(1) : additional_public_attributes;
 
 		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(byteOut);
 
 		dataOut.writeUTF(username);
 		dataOut.writeLong(expiration_date);
-		dataOut.writeInt(additional_attributes.size());
 		
-		for(Entry<String,String> e : additional_attributes.entrySet()) {
+		dataOut.writeInt(additional_public_attributes.size());
+		for(Entry<String,String> e : additional_public_attributes.entrySet()) {
 			dataOut.writeUTF(e.getKey());
 			dataOut.writeUTF(e.getValue());
 		}
+		
+		byte[] private_payload = buildPrivatePayload(additional_private_attributes, encryptCipher);
+		dataOut.writeInt(private_payload.length);
+		dataOut.write(private_payload, 0, private_payload.length);
 
 		dataOut.flush();
 		byteOut.flush();
@@ -178,10 +224,31 @@ public class AuthenticationToken {
 
 		dataOut.close();
 		byteOut.close();
-		
+				
 		byte[] signature = Cryptography.sign(sig, privKey, payload);
 		
-		return new AuthenticationToken(username, expiration_date, payload, signature, additional_attributes);
+		return new AuthenticationToken(username, expiration_date, payload, signature, private_payload, additional_public_attributes, null);
+	}
+	
+	private static byte[] buildPrivatePayload(Map<String,String> additional_private_attributes, Cipher encryptCipher) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IOException {
+		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+		DataOutputStream dataOut = new DataOutputStream(byteOut);
+		
+		dataOut.writeInt(additional_private_attributes.size());
+		for(Entry<String,String> e : additional_private_attributes.entrySet()) {
+			dataOut.writeUTF(e.getKey());
+			dataOut.writeUTF(e.getValue());
+		}
+
+		dataOut.flush();
+		byteOut.flush();
+
+		byte[] private_payload = byteOut.toByteArray();
+
+		dataOut.close();
+		byteOut.close();
+		
+		return Cryptography.encrypt(encryptCipher, private_payload);
 	}
 
 }

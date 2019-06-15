@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -27,10 +30,13 @@ public interface AccessControler {
 	 * @throws SignatureException 
 	 * @throws InvalidKeyException 
 	 * @throws IOException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws ShortBufferException 
 	 */
 	@GET
 	@Path("/{operation}/{username}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public RestResponse hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException;
+	public RestResponse hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException;
 		
 }

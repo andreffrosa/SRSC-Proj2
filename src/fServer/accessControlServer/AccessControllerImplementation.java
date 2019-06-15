@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 import javax.ws.rs.core.Response.Status;
 
 import java.util.Properties;
@@ -23,7 +26,7 @@ public class AccessControllerImplementation implements AccessControler {
 	private static final String REGEX = " ";
 	private static final int READ_POS = 0;
 	private static final int WRITE_POS = 1;
-	
+
 	private Map<String, boolean[]> permissionsMap;
 	private TokenVerifier tokenVerifier;
 
@@ -54,14 +57,14 @@ public class AccessControllerImplementation implements AccessControler {
 					permissions[WRITE_POS] = true;
 				else
 					permissions[WRITE_POS] = false;
-			
+
 				permissions[READ_POS] = true;
 			}
-			
+
 			permissionsMap.put(user, permissions);
 		}
 	}
-		
+
 	private synchronized boolean canRead(String username) {
 
 		if(permissionsMap.containsKey(username)) 
@@ -73,39 +76,37 @@ public class AccessControllerImplementation implements AccessControler {
 	}
 
 	private synchronized boolean canWrite(String username) {
-		
+
 		if(permissionsMap.containsKey(username))
 			if(permissionsMap.get(username)[WRITE_POS]) {		
 				return true;
 			}
-			
+
 		return false;
 	}
 
 	@Override
+	public synchronized RestResponse hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException {
 
-	public synchronized RestResponse hasAccess(String token, String operation, String username) throws InvalidKeyException, SignatureException, IOException {
-
-		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		AuthenticationToken auth = AuthenticationToken.parseToken(token, null);
 		if(!tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
 			System.out.println("User " + username + " presented invalid token");
 			return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Invalid Token.");
 		}
-		
+
 		boolean result = false;
-		
+
 		if(operation.equals(AccessControler.WRITE_ACCESS_REQUEST)) {
 			result = canWrite(username);
 		}else
 			result = canRead(username);
-		
+
 		System.out.println( username + " has access to " + operation  + "? " + (result ? "granted" : "denied"));
-		
+
 		if(result)
 			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
 		else
 			return new RestResponse("1.0",Status.FORBIDDEN.getStatusCode(), "Forbidden", "Permission Denied");
-	
 	}
 
 }

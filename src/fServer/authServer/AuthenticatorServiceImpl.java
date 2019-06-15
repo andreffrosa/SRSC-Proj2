@@ -17,6 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.BadPaddingException;
@@ -124,18 +125,12 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 			KeyPair	kp = dh.genKeyPair();
 			SecretKey ks = dh.establishSecretKey(kp.getPrivate(), cliet_pub_key);
 
-			// Generate new IV
-			byte[] iv = null;
-			if(tokenIssuer.useIv()) {
-				iv = Cryptography.createIV(tokenIssuer.getIv_size());
-			} else {
-				iv = new byte[0];
-			}
-
 			// Generate new token
-			AuthenticationToken token = tokenIssuer.newToken(user);
+			Entry<AuthenticationToken, byte[]> e = tokenIssuer.newToken(user, ks);
+			AuthenticationToken token = e.getKey();
+			byte[] iv = e.getValue();
 			
-			EncryptedToken encToken = encapsulateToken(token, ks, iv, ciphers[0], client_nonce+1,  kp.getPublic());
+			EnvelopedToken encToken = encapsulateToken(token, ks, iv, ciphers[0], client_nonce+1,  kp.getPublic());
 		
 			System.out.println( username + " logged in! Token valid until " + new Date(token.getExpiration_date()).toString());
 			
@@ -145,13 +140,11 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		}
 	}
 
-	private synchronized EncryptedToken encapsulateToken(AuthenticationToken token, SecretKey ks, byte[] iv, Cipher encCipher, long challenge_answer, PublicKey myPubKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
-		Cipher cipher = Cryptography.buildCipher(tokenIssuer.getCiphersuite(), Cipher.ENCRYPT_MODE, ks, iv);
-		byte[] enc_token = Cryptography.encrypt(cipher, token.serialize());
+	private synchronized EnvelopedToken encapsulateToken(AuthenticationToken token, SecretKey ks, byte[] iv, Cipher encCipher, long challenge_answer, PublicKey myPubKey) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
 
-		byte[] server_answer = buildAnswer(challenge_answer, myPubKey, Cryptography.encrypt(encCipher, iv), encCipher);
+		byte[] server_answer = buildAnswer(challenge_answer, myPubKey, iv, encCipher);
 
-		return new EncryptedToken(enc_token, server_answer);
+		return new EnvelopedToken(token.serialize(), server_answer);
 	}
 
 	private synchronized byte[] buildAnswer(long challenge_answer, PublicKey pubKey, byte[] encrypted_iv, Cipher cipher) throws IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException {
@@ -159,7 +152,7 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 		DataOutputStream dataOut = new DataOutputStream(byteOut);
 
 		dataOut.writeLong(challenge_answer);
-		dataOut.writeUTF( Cryptography.encodePublicKey(pubKey));
+		dataOut.writeUTF(Cryptography.encodePublicKey(pubKey));
 		dataOut.writeInt(encrypted_iv.length);
 		dataOut.write(encrypted_iv, 0, encrypted_iv.length);
 

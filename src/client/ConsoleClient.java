@@ -287,7 +287,7 @@ public class ConsoleClient {
 			
 			username = client.getToken().getUsername();
 		
-			System.out.println("\n\tWelcome " + client.getToken().getAdditional_attributes().get("name") + "!");
+			System.out.println("\n\tWelcome " + client.getToken().getAdditional_private_attributes().get("name") + "!");
 			
 		} catch (ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
 			System.out.println("\t" + e.getMessage());

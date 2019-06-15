@@ -74,12 +74,12 @@ public class AuthenticationServer {
 		int secret_key_size = Integer.parseInt(properties.getProperty("SECRET-KEY-SIZE"));
 		
 		String secret_key_algorithm = properties.getProperty("SECRET-KEY-ALGORITHM");
-		String provider = properties.getProperty("SECRET-KEY-ALGORITHM-PROVIDER");
+		String secret_key_provider = properties.getProperty("SECRET-KEY-ALGORITHM-PROVIDER");
 		
 		String secure_random_algorithm = properties.getProperty("SECURE-RANDOM");
 		SecureRandom sr = (secure_random_algorithm == null) ? SecureRandom.getInstance("sha1PRNG") : SecureRandom.getInstance(secure_random_algorithm);
 		
-		dh = new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, provider, sr);
+		dh = new DiffieHellman(p, g, secret_key_size, secret_key_algorithm, secret_key_provider, sr);
 		
 		long token_ttl = Long.parseLong(properties.getProperty("TOKEN-TTL"));
 		String signature_algorithm = properties.getProperty("SIGNATURE-ALGORITHM");
@@ -91,6 +91,8 @@ public class AuthenticationServer {
 		String certificate_alias  = properties.getProperty("CERTIFICATE-ALIAS");
 		
 		String ciphersuite = properties.getProperty("CIPHERSUITE");
+		String provider = properties.getProperty("PROVIDER");
+		
 		boolean use_iv = Boolean.parseBoolean(properties.getProperty("USE-IV", "false"));
 		int iv_size = Integer.parseInt(properties.getProperty("IV-SIZE", "0"));
 		
@@ -101,7 +103,7 @@ public class AuthenticationServer {
 		
 		Signature sig = signature_algorithm_provider == null ? Signature.getInstance(signature_algorithm) : Signature.getInstance(signature_algorithm, signature_algorithm_provider);
 		
-		tokenIssuer = new TokenIssuer(token_ttl, kp, sig, ciphersuite, use_iv, iv_size);
+		tokenIssuer = new TokenIssuer(token_ttl, kp, sig, ciphersuite, provider, use_iv, iv_size);
 		
 		String hash_algorithm = properties.getProperty("HASH-ALGORITHM");
 		String hash_algorithm_provider = properties.getProperty("HASH-ALGORITHM-PROVIDER");

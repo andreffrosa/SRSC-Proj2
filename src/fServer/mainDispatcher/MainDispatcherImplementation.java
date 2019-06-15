@@ -83,7 +83,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 
 	private synchronized <K,T> RestResponse processRequest(String token, String opType, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
 		
-		AuthenticationToken auth = AuthenticationToken.parseToken(token);
+		AuthenticationToken auth = AuthenticationToken.parseToken(token, null);
 
 		if(tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
 
