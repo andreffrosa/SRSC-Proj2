@@ -9,26 +9,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.InvalidKeyException;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
 import javax.ws.rs.core.Response.Status;
 
-import fServer.accessControlServer.AccessControler;
 import fServer.authServer.AuthenticationToken;
 import fServer.authServer.TokenVerifier;
 import rest.RestResponse;
 import utility.RequestHandler;
 
 /**
- * @author ruben
+ * @author Ruben & Andre
  *
  *This class is an implementation of the Storage Service.
  *
@@ -48,9 +42,11 @@ public class StorageImplementation implements StorageService {
 	private synchronized <K,T> RestResponse processRequest(String token, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
 		AuthenticationToken auth = AuthenticationToken.parseToken(token, null);
 		if(tokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
+			//if(tokenVerifier.validateAccessToken(System.currentTimeMillis(), accessToken))
 			return requestHandler.execute(auth);
+			//return new RestResponse("1.0", Status.FORBIDDEN.getStatusCode(), "Forbidden", "Access denied".getBytes());
 		} else {
-			return new RestResponse("1.0", 403, "Forbidden", "Invalid Token!".getBytes());
+			return new RestResponse("1.0", Status.UNAUTHORIZED.getStatusCode(), "UnAuthorized", "Invalid Token!".getBytes());
 		}
 	}
 
@@ -58,7 +54,7 @@ public class StorageImplementation implements StorageService {
 	public RestResponse listFiles(String token, String username, String path) throws Exception {
 		return processRequest(token, (auth) -> {
 			Path dirPath = buildPath(username, path);
-			return new RestResponse("1.0", Status.OK.getStatusCode(), "Sending list", listFiles(dirPath));
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", listFiles(dirPath));
 		});
 	}
 
@@ -79,7 +75,7 @@ public class StorageImplementation implements StorageService {
 				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
 
 			} catch (IOException e) {
-				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", false);
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "IOException", false);
 			}
 		});
 	}
@@ -105,15 +101,15 @@ public class StorageImplementation implements StorageService {
 			Path destPath = buildPath(username, dest);
 
 			if(!Files.exists(originPath) || !Files.isReadable(originPath))
-				return new RestResponse("1.0", 200, "OK", false);;
+				return new RestResponse("1.0", Status.NOT_FOUND.getStatusCode(), "Not Found", false);;
 
 				try {
 
 					Files.copy(originPath, destPath);
-					return new RestResponse("1.0", 200, "OK", true);
+					return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
 
 				} catch (IOException e) {
-					return new RestResponse("1.0", 200, "OK", false);
+					return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "IOException", false);
 				}
 		});
 	}
@@ -125,7 +121,7 @@ public class StorageImplementation implements StorageService {
 			try {
 				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK",  Files.deleteIfExists(filePath));
 			} catch (IOException e) {
-				return new RestResponse("1.0", 200, "OK", false);
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "IOException", false);
 			}
 		});
 	}
@@ -135,12 +131,12 @@ public class StorageImplementation implements StorageService {
 		return processRequest(token, (auth) -> {
 			Path dirPath = buildPath(username, path);
 			if(listFiles(dirPath).size() > 0)
-				return new RestResponse("1.0", 200, "OK", false);
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", false);
 			try {
 				Files.delete(dirPath);
-				return new RestResponse("1.0", 200, "OK", true);
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
 			} catch (IOException e) {
-				return new RestResponse("1.0", 200, "OK", false);
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "IOException", false);
 			}
 		});
 	}

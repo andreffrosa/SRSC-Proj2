@@ -8,6 +8,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import client.exception.FileNotFoundException;
+import client.exception.LogginRequieredException;
+import client.exception.UnautorizedException;
 import fServer.authServer.DeniedAccessException;
 import fServer.authServer.ExpiredTokenException;
 import fServer.authServer.WrongChallengeAnswerException;
@@ -56,7 +59,7 @@ public class ConsoleClient {
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
 		LoginUtility login_util = LoginUtility.fromConfig(login_configs);
-		
+
 		client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
 				kstores[1].getKeystore(), location, login_util);
 
@@ -72,7 +75,7 @@ public class ConsoleClient {
 		username = "";
 
 		System.out.println( "Remote File Storage Service " + (new Date()).toString());
-		
+
 		while (!exit) {
 			System.out.print(username + "$" + current_path + "> ");
 			cmd = in.next().toLowerCase();
@@ -148,7 +151,20 @@ public class ConsoleClient {
 
 	private static void getFileData(String current_path, Scanner in) {
 		String fileName = IO.resolvePath(current_path, in.nextLine().trim());
-		String bfa = client.getFileMetadata(username, fileName);
+		String bfa = null;
+		try {
+			bfa = client.getFileMetadata(username, fileName);
+		
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
+		
 		if(bfa != null) {
 			System.out.println(bfa.toString()); //check if this is good
 		}
@@ -156,14 +172,34 @@ public class ConsoleClient {
 
 	private static void rmDir(String current_path, Scanner in) {
 		String dirName = IO.resolvePath(current_path, in.nextLine().trim());
-		if(!client.removeDirectory(username, dirName))
-			System.out.println("Error Deleting file: " + dirName);
+		try {
+			if(!client.removeDirectory(username, dirName))
+				System.out.println("Error Deleting file: " + dirName);
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 	}
 
 	private static void rmFile(String current_path, Scanner in) {
 		String fileNameString = IO.resolvePath(current_path, in.nextLine().trim());
-		if(!client.remove(username, fileNameString))
-			System.out.println("Error Deliting file: " + fileNameString);
+		try {
+			if(!client.remove(username, fileNameString))
+				System.out.println("Error Deliting file: " + fileNameString);
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 
 	}
 
@@ -171,22 +207,46 @@ public class ConsoleClient {
 
 		String src = IO.resolvePath(current_path, in.next().trim());
 		String dest = IO.resolvePath(current_path, in.nextLine().trim());
-		
-		client.copy(username, src, dest);
+
+		try {
+			
+			client.copy(username, src, dest);
+			
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 	}
 
 	private static void download(String current_path, Scanner in) throws IOException {
-		
+
 		String remote_file = IO.resolvePath(current_path, in.next().trim());
 		String local_file = IO.resolvePath(LOCAL_STORAGE, in.nextLine().trim());
-		
-		byte[] data = client.download(username, remote_file);
+
+		byte[] data = null;
+
+		try {
+			data = client.download(username, remote_file);
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 
 		if (data != null)
 			Files.write(Paths.get(local_file), data);
 		else
 			System.out.println("File not found");
-		
+
 		/*String fileName = IO.resolvePath(current_path, in.nextLine());
 		Path localFilePath = Paths.get(LOCAL_STORAGE, fileName);
 		byte[] data = client.download(username, String.format("%s/%s", current_path, fileName));
@@ -201,7 +261,7 @@ public class ConsoleClient {
 
 		String local_file = IO.resolvePath(LOCAL_STORAGE, in.next().trim());
 		String remote_file = IO.resolvePath(current_path, in.nextLine().trim());
-		
+
 		System.out.println(local_file);
 		System.out.println(remote_file);
 		byte[] data = null;
@@ -209,13 +269,19 @@ public class ConsoleClient {
 			Path p = Paths.get(local_file);
 			if (Files.exists(p) && Files.isReadable(p))
 				data = Files.readAllBytes(p);
-			
+
 			client.upload(username, remote_file, data);
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + local_file);
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
 		}
-		
-		
+
+
 		/*String fileName = IO.resolvePath("./", in.nextLine());
 		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
 		byte[] data = null;
@@ -228,31 +294,54 @@ public class ConsoleClient {
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + fileName);
 		}
-*/
-		
+		 */
+
 	}
 
 	private static void mkdir(String current_path, Scanner in) {
-		
+
 		String path = IO.resolvePath(current_path, in.nextLine().trim());
-		
+
 		String dirName = String.format("%s/%s/", current_path, path);
-		if (!client.mkdir(username, dirName))
-			System.out.println("Impossible to create directory");
+		try {
+
+			if (!client.mkdir(username, dirName))
+				System.out.println("Impossible to create directory");
+
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 
 	}
 
 	private static void listFiles(String current_path, Scanner in) {
 
 		List<String> files;
-		
+
 		String path = in.nextLine();
-		if(path.equals(""))
-			files = client.listFiles(username, current_path);
-		else
-			files = client.listFiles(username, IO.resolvePath(current_path, path));
-		
-		files.forEach( f -> System.out.println("\t" + f));
+
+		try {
+
+			if(path.equals(""))
+				files = client.listFiles(username, current_path);
+			else
+				files = client.listFiles(username, IO.resolvePath(current_path, path));
+
+			files.forEach( f -> System.out.println("\t" + f));
+
+		} catch (LogginRequieredException e) {
+			System.out.println("Error: You are not logged in.");
+		} catch (UnautorizedException e) {
+			System.out.println("Error: You don't have permission for that operation");
+		} catch (FileNotFoundException e) {
+			System.out.println("Error: That file does not exist.");
+		}catch(Exception e) {
+			System.out.println("Unexpected error: " + e.getMessage());
+		}
 	}
 
 	private static void listCmds() {
@@ -267,7 +356,7 @@ public class ConsoleClient {
 		System.out.println("Get metadata: file <pathToFile>");
 	}
 
-	
+
 	private static String changeDir(Scanner in, String current_path) {
 		String path = in.nextLine().trim();
 
@@ -280,19 +369,23 @@ public class ConsoleClient {
 		System.out.print(String.format("Enter password for %s : ", username));
 
 		String password = in.nextLine();
-		
+
 		boolean result = false;
-		try {
-			result = client.login(username, password);
-			
+
+			try {
+				result = client.login(username, password);
+			} catch (ExpiredTokenException e) {
+				System.out.println("Session expired, please login again");
+			} catch (WrongChallengeAnswerException e) {
+				System.out.println("Error: Wrong password");
+			} catch (DeniedAccessException e) {
+				System.out.println("You don't have permissions for that operation");
+			}
+
 			username = client.getToken().getUsername();
-		
+
 			System.out.println("\n\tWelcome " + client.getToken().getAdditional_private_attributes().get("name") + "!");
-			
-		} catch (ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
-			System.out.println("\t" + e.getMessage());
-			return null;
-		}
+
 
 		return result ? username : null;
 	}
