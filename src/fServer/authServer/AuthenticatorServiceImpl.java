@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -29,8 +28,8 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.DHParameterSpec;
 
 import rest.RestResponse;
-import token.auth.AuthenticationToken;
 import token.auth.AuthTokenIssuer;
+import token.auth.AuthenticationToken;
 import utility.Cryptography;
 import utility.LoginUtility;
 
