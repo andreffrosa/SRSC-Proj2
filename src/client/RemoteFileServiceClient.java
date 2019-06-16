@@ -2,14 +2,22 @@ package client;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
 import javax.ws.rs.core.Response.Status;
 
 import client.exception.FileNotFoundException;
@@ -64,15 +72,20 @@ public class RemoteFileServiceClient{
 	public boolean login(String username, String password) throws ExpiredTokenException, WrongChallengeAnswerException, DeniedAccessException {
 
 		try {
+
 			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, login_util);
+
 			return true;
+
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException
+				| InvalidAlgorithmParameterException | ShortBufferException | IllegalBlockSizeException
+				| BadPaddingException | NoSuchPaddingException | InvalidKeySpecException | IOException e) {
+
+			e.printStackTrace();
 
 		} catch(ExpiredTokenException | WrongChallengeAnswerException | DeniedAccessException e) {
 			throw e;
-		} catch(Exception e) {
-			e.printStackTrace();
 		}
-
 		return false;
 	}
 
@@ -90,8 +103,8 @@ public class RemoteFileServiceClient{
 
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -99,24 +112,24 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.get();
-
-			if (response.getStatusCode() == Status.OK.getStatusCode()) { 
-				return (List<String>) response.getEntity(List.class);			
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("Folder not foud.\n");
-			}else
-				throw new RuntimeException("ls: " + response.getStatusCode());
 		});
+		
+		if (response.getStatusCode() == Status.OK.getStatusCode()) { 
+			return (List<String>) response.getEntity(List.class);			
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("Folder not foud.\n");
+		}else
+			throw new RuntimeException("ls: " + response.getStatusCode());
 	}
 
 	public boolean mkdir(String username, String path) throws LogginRequieredException, UnautorizedException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -124,22 +137,22 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.post(null);
-
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			} else
-				throw new RuntimeException("mkdir: " + response.getStatusCode());
 		});
+		
+		if (response.getStatusCode() == Status.OK.getStatusCode()) {
+			return (boolean) response.getEntity(boolean.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		} else
+			throw new RuntimeException("mkdir: " + response.getStatusCode());
 	}
 
 	public boolean upload(String username, String path, byte[] data) throws LogginRequieredException, UnautorizedException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -147,22 +160,22 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.put(data);
-
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");			
-			} else
-				throw new RuntimeException("put: " + response.getStatusCode());
 		});
+		
+		if (response.getStatusCode() == Status.OK.getStatusCode()) {
+			return (boolean) response.getEntity(boolean.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");			
+		} else
+			throw new RuntimeException("put: " + response.getStatusCode());
 	}
 
 	public byte[] download(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -171,23 +184,24 @@ public class RemoteFileServiceClient{
 					.addPathParam(path)
 					.get();
 
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				return (byte[]) response.getEntity(byte[].class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("File Not Found.\n");
-			} else
-				throw new RuntimeException("get: " + response.getStatusCode());
 		});
+	
+		if (response.getStatusCode() == Status.OK.getStatusCode()) {
+			return (byte[]) response.getEntity(byte[].class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("File Not Found.\n");
+		} else
+			throw new RuntimeException("get: " + response.getStatusCode());
 	}
 
 	public boolean copy(String username, String origin, String dest) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response= client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -196,24 +210,25 @@ public class RemoteFileServiceClient{
 					.addPathParam(origin)
 					.addPathParam(dest)
 					.put(null);
-
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("File Not Found.\n");
-			} else 
-				throw new RuntimeException("cp: " + response.getStatusCode());
 		});
+	
+		if (response.getStatusCode() == Status.OK.getStatusCode()) {
+			return (boolean) response.getEntity(boolean.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("File Not Found.\n");
+		} else 
+			throw new RuntimeException("cp: " + response.getStatusCode());
 	}
+	
 
 	public boolean remove(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -221,24 +236,24 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.delete(null);
-
-			if (response.getStatusCode() == 200) {
-				return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("File not found.");
-			} else
-				throw new RuntimeException("rm: " + response.getStatusCode());
 		});
+		
+		if (response.getStatusCode() == 200) {
+			return (boolean) response.getEntity(boolean.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("File not found.");
+		} else
+			throw new RuntimeException("rm: " + response.getStatusCode());
 	}
 
 	public boolean removeDirectory(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -246,24 +261,24 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.delete(null);
-
-			if (response.getStatusCode() == 200) {
-				return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("Directory not found.\n");
-			} else
-				throw new RuntimeException("rmdir: " + response.getStatusCode());
 		});
+		
+		if (response.getStatusCode() == 200) {
+			return (boolean) response.getEntity(boolean.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("Directory not found.\n");
+		} else
+			throw new RuntimeException("rmdir: " + response.getStatusCode());
 	}
 
 	public String getFileMetadata(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
-		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH)
+		RestResponse response = processRequest((location) -> {
+			return client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
 					.addHeader("Access", null)
 					.addHeader("nonce", nonce)
@@ -271,18 +286,18 @@ public class RemoteFileServiceClient{
 					.addPathParam(username)
 					.addPathParam(path)
 					.get();
-
-			if (response.getStatusCode() == 200) {
-				return (String) response.getEntity(String.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
-				throw new LogginRequieredException("Invalid Loggin.\n");
-			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
-				throw new UnautorizedException("Access denied.\n");
-			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
-				throw new FileNotFoundException("File not found.\n");
-			} else
-				throw new RuntimeException("file: " + response.getStatusCode());
 		});	
+		
+		if (response.getStatusCode() == 200) {
+			return (String) response.getEntity(String.class);
+		}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			throw new LogginRequieredException("Invalid Loggin.\n");
+		}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+			throw new UnautorizedException("Access denied.\n");
+		}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+			throw new FileNotFoundException("File not found.\n");
+		} else
+			throw new RuntimeException("file: " + response.getStatusCode());
 	}
 
 	public AuthenticationToken getToken() {
