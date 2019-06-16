@@ -1,4 +1,4 @@
-package fServer.authServer;
+package token;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -33,7 +33,7 @@ public class TokenVerifier {
 		return sig;
 	}
 	
-	public boolean validateToken(long current_time, AuthenticationToken token) throws InvalidKeyException, SignatureException {
+	public boolean validateToken(long current_time, Token token) throws InvalidKeyException, SignatureException {
 		return token.isValid(current_time, sig, tokenIssuerPubKey);
 	}
 	

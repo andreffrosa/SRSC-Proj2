@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Scanner;
 
 import fServer.authServer.DeniedAccessException;
-import fServer.authServer.ExpiredTokenException;
 import fServer.authServer.WrongChallengeAnswerException;
+import token.ExpiredTokenException;
 import utility.IO;
 import utility.LoginUtility;
 import utility.MyKeyStore;

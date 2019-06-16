@@ -1,4 +1,4 @@
-package fServer.authServer;
+package token;
 
 public class ExpiredTokenException extends Exception {
 

@@ -1,4 +1,4 @@
-package fServer.authServer;
+package token.auth;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -25,25 +25,23 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 
+import fServer.authServer.User;
+import token.AbstractTokenIssuer;
 import utility.Cryptography;
 import utility.IO;
 import utility.MyKeyStore;
 
-public class TokenIssuer {
+public class AuthTokenIssuer extends AbstractTokenIssuer {
 
-	private long token_ttl;
-	private KeyPair kp;
-	private Signature sig;
 	private String ciphersuite;
 	private String provider;
 	private boolean use_iv;
 	private int iv_size;
 
-	public TokenIssuer(long token_ttl, KeyPair kp, Signature sig, String ciphersuite, String provider, boolean use_iv, int iv_size) {
-		this.token_ttl = token_ttl;
-		this.kp = kp;
-		this.sig = sig;
+	public AuthTokenIssuer(long token_ttl, KeyPair kp, Signature sig, String ciphersuite, String provider, boolean use_iv, int iv_size) {
+		super(token_ttl, kp, sig);
 		this.ciphersuite = ciphersuite;
+		this.provider = provider;
 		this.use_iv = use_iv;
 		this.iv_size = iv_size;
 	}
@@ -55,18 +53,6 @@ public class TokenIssuer {
 	public String getCiphersuite() {
 		return ciphersuite;
 	}
-
-	public long getToken_ttl() {
-		return token_ttl;
-	}
-
-	public KeyPair getKp() {
-		return kp;
-	}
-
-	public Signature getSig() {
-		return sig;
-	}	
 
 	public boolean useIv() {
 		return use_iv;
@@ -103,7 +89,7 @@ public class TokenIssuer {
 		return new AbstractMap.SimpleEntry<AuthenticationToken, byte[]>(token, iv);
 	}
 
-	public static TokenIssuer fromConfigFile(String config) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {
+	public static AuthTokenIssuer fromConfigFile(String config) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {
 		Properties properties = IO.loadProperties(config);
 
 		long token_ttl = Long.parseLong(properties.getProperty("TOKEN-TTL"));
@@ -128,7 +114,7 @@ public class TokenIssuer {
 
 		Signature sig = signature_algorithm_provider == null ? Signature.getInstance(signature_algorithm) : Signature.getInstance(signature_algorithm, signature_algorithm_provider);
 
-		return new TokenIssuer(token_ttl, kp, sig, ciphersuite, provider, use_iv, iv_size);
+		return new AuthTokenIssuer(token_ttl, kp, sig, ciphersuite, provider, use_iv, iv_size);
 	}
 
 }

@@ -11,14 +11,15 @@ import java.security.cert.CertificateException;
 import java.util.List;
 
 import fServer.authServer.AuthenticationClient;
-import fServer.authServer.AuthenticationToken;
 import fServer.authServer.DeniedAccessException;
-import fServer.authServer.ExpiredTokenException;
 import fServer.authServer.WrongChallengeAnswerException;
 import fServer.mainDispatcher.RemoteFileService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import ssl.CustomSSLSocketFactory;
+import token.ExpiredTokenException;
+import token.auth.AuthenticationToken;
+import utility.Cryptography;
 import utility.LoginUtility;
 import utility.RequestHandler;
 
@@ -70,7 +71,6 @@ public class RemoteFileServiceClient{
 		return false;
 	}
 	
-	// TODO: Colocar na interface?
 	public boolean logout() {
 		if(this.authToken!=null) {
 			this.authToken = null;
@@ -82,10 +82,14 @@ public class RemoteFileServiceClient{
 
 	@SuppressWarnings("unchecked")
 	public List<String> listFiles(String username, String path) {
-
+		
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
+		
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("ls")
 					.addPathParam(username)
 					.addPathParam(path)
@@ -99,9 +103,16 @@ public class RemoteFileServiceClient{
 	}
 
 	public boolean mkdir(String username, String path) {
-
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
-			RestResponse response = client.newRequest(RemoteFileService.PATH).addHeader("Authorization", authToken.getBase64()).addPathParam("mkdir").addPathParam(username).addPathParam(path).post(null);
+			RestResponse response = client.newRequest(RemoteFileService.PATH)
+					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
+					.addPathParam("mkdir")
+					.addPathParam(username)
+					.addPathParam(path)
+					.post(null);
 
 			if (response.getStatusCode() == 200) {
 				return (boolean) response.getEntity(boolean.class);
@@ -111,9 +122,12 @@ public class RemoteFileServiceClient{
 	}
 
 	public boolean upload(String username, String path, byte[] data) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("put")
 					.addPathParam(username)
 					.addPathParam(path)
@@ -128,9 +142,12 @@ public class RemoteFileServiceClient{
 
 
 	public byte[] download(String username, String path) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("get")
 					.addPathParam(username)
 					.addPathParam(path)
@@ -145,10 +162,12 @@ public class RemoteFileServiceClient{
 
 
 	public boolean copy(String username, String origin, String dest) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
-			
 			RestResponse response= client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("cp")
 					.addPathParam(username)
 					.addPathParam(origin)
@@ -163,9 +182,12 @@ public class RemoteFileServiceClient{
 	}
 
 	public boolean remove(String username, String path) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("rm")
 					.addPathParam(username)
 					.addPathParam(path)
@@ -179,9 +201,12 @@ public class RemoteFileServiceClient{
 	}
 
 	public boolean removeDirectory(String username, String path) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("rmdir")
 					.addPathParam(username)
 					.addPathParam(path)
@@ -195,9 +220,12 @@ public class RemoteFileServiceClient{
 	}
 
 	public String getFileMetadata(String username, String path) {
+		String nonce = "" + Cryptography.genNonce(login_util.getRandom());
 		return processRequest((location) -> {
 			RestResponse response = client.newRequest(RemoteFileService.PATH)
 					.addHeader("Authorization", authToken.getBase64())
+					.addHeader("Access", null)
+					.addHeader("nonce", nonce)
 					.addPathParam("file")
 					.addPathParam(username)
 					.addPathParam(path)

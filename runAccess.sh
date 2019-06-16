@@ -9,6 +9,7 @@ PORT="6666"
 TLS="./configs/fServer/servertls.conf"
 KEYSTORE="./configs/fServer/accessControlServer/keystores.conf"
 TABLE="./configs/fServer/accessControlServer/access_table.txt"
-TOKEN="./configs/fServer/token_verification.conf"
+AUTH_TOKEN="./configs/fServer/auth_token_verification.conf"
+ACCESS_CONFIG="./configs/fServer/accessControlServer/access.conf"
 
-$JAVA $JAVA_ARGS $CP fServer.accessControlServer.AccessControlServer $PORT $TLS $KEYSTORE $TABLE $TOKEN $@
+$JAVA $JAVA_ARGS $CP fServer.accessControlServer.AccessControlServer $PORT $TLS $KEYSTORE $TABLE $AUTH_TOKEN $ACCESS_CONFIG $@

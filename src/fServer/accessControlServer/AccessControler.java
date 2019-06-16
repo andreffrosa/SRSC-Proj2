@@ -1,11 +1,15 @@
 package fServer.accessControlServer;
 
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -33,10 +37,14 @@ public interface AccessControler {
 	 * @throws BadPaddingException 
 	 * @throws IllegalBlockSizeException 
 	 * @throws ShortBufferException 
+	 * @throws NoSuchProviderException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
 	 */
 	@GET
-	@Path("/{operation}/{username}")
+	@Path("/{username}/{op_type}/{op_params}/{nonce}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public RestResponse hasAccess(@HeaderParam("Authorization") String token, @PathParam("operation") String operation, @PathParam("username") String username) throws InvalidKeyException, SignatureException, IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException;
+	public RestResponse hasAccess(@HeaderParam("Authorization") String auth_token,  @PathParam("username") String username, @PathParam("op_type") String operation, @PathParam("op_params") String params, @PathParam("nonce") long nonce) throws InvalidKeyException, SignatureException, IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException;
 		
 }

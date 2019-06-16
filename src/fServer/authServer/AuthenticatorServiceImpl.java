@@ -29,6 +29,8 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.DHParameterSpec;
 
 import rest.RestResponse;
+import token.auth.AuthenticationToken;
+import token.auth.AuthTokenIssuer;
 import utility.Cryptography;
 import utility.LoginUtility;
 
@@ -41,10 +43,10 @@ public class AuthenticatorServiceImpl implements AuthenticatorService {
 	private Map<String,User> authentication_table;
 	private SecureRandom sr;
 	private DiffieHellman dh;
-	private TokenIssuer tokenIssuer;
+	private AuthTokenIssuer tokenIssuer;
 	private LoginUtility login_util;
 
-	public AuthenticatorServiceImpl(DiffieHellman dh, Map<String,User> authentication_table, TokenIssuer tokenIssuer, LoginUtility login_util) {
+	public AuthenticatorServiceImpl(DiffieHellman dh, Map<String,User> authentication_table, AuthTokenIssuer tokenIssuer, LoginUtility login_util) {
 		this.dh = dh;
 		this.sr = dh.getSecureRandom();
 		this.authentication_table = authentication_table;

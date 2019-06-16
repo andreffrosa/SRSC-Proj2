@@ -29,7 +29,7 @@ public interface StorageService {
 	@GET
 	@Path("/ls/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse listFiles(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse listFiles(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Creates a directory on the specified path.
@@ -41,7 +41,7 @@ public interface StorageService {
 	@POST
 	@Path("/mkdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse mkdir(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse mkdir(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Uploads a file to the specified directory.
@@ -55,7 +55,7 @@ public interface StorageService {
 	@Path("/put/{username}/{path}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse upload(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path, byte[] data ) throws Exception;
+	public RestResponse upload(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path, byte[] data ) throws Exception;
 	
 	/**
 	 * Downloads a file that resides in the specified directory
@@ -67,7 +67,7 @@ public interface StorageService {
 	@GET
 	@Path("/get/{username}/{path}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public RestResponse download(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse download(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Copies a file from some path1 to some other path2.
@@ -80,7 +80,7 @@ public interface StorageService {
 	@PUT
 	@Path("/cp/{username}/{src}/{dest}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse copy(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("src") String src, @PathParam("dest") String dest) throws Exception;
+	public RestResponse copy(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("src") String src, @PathParam("dest") String dest) throws Exception;
 	
 	/**
 	 * Removes a file that resides on the specified path.
@@ -92,7 +92,7 @@ public interface StorageService {
 	@DELETE
 	@Path("/rm/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse remove(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse remove(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Removes a directory with the path provided.
@@ -104,7 +104,7 @@ public interface StorageService {
 	@DELETE
 	@Path("/rmdir/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse removeDirectory(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse removeDirectory(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	/**
 	 * Retrieved a file metadata
@@ -116,7 +116,7 @@ public interface StorageService {
 	@GET
 	@Path("/file/{username}/{path}")
 	@Produces(MediaType.APPLICATION_JSON + CHARSET)
-	public RestResponse getFileMetadata(@HeaderParam("Authorization") String token, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
+	public RestResponse getFileMetadata(@HeaderParam("Authorization") String token, @HeaderParam("Access") String access_token, @HeaderParam("nonce") long nonce, @PathParam("username") String username, @PathParam("path") String path) throws Exception;
 	
 	
 }

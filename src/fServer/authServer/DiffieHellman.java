@@ -113,7 +113,7 @@ public class DiffieHellman {
 		int secret_key_size = Integer.parseInt(properties.getProperty("SECRET-KEY-SIZE"));
 		
 		String secret_key_algorithm = properties.getProperty("SECRET-KEY-ALGORITHM");
-		String provider = properties.getProperty("PROVIDER");
+		String provider = properties.getProperty("DH-PROVIDER");
 		
 		String secure_random_algorithm = properties.getProperty("SECURE-RANDOM");
 		SecureRandom sr = (secure_random_algorithm == null) ? SecureRandom.getInstance("sha1PRNG") : SecureRandom.getInstance(secure_random_algorithm);

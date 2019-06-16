@@ -28,6 +28,8 @@ import javax.crypto.spec.IvParameterSpec;
 
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
+import token.ExpiredTokenException;
+import token.auth.AuthenticationToken;
 import utility.Cryptography;
 import utility.LoginUtility;
 

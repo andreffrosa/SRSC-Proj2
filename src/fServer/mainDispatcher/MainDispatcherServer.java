@@ -3,9 +3,9 @@ package fServer.mainDispatcher;
 import java.security.KeyStore;
 import java.util.Properties;
 
-import fServer.authServer.TokenVerifier;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
+import token.TokenVerifier;
 import utility.IO;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
@@ -14,8 +14,8 @@ public class MainDispatcherServer {
 
 	public static void main(String[] args) throws Exception {
 
-		if (args.length < 5) {
-			System.err.println("Usage: MainDispatcher <port> <tls-configs> <keystore-configs> <service-endpoints> <token-verification>");
+		if (args.length < 6) {
+			System.err.println("Usage: MainDispatcher <port> <tls-configs> <keystore-configs> <service-endpoints> <auth-token-verification> <access-token-verification>");
 			System.exit(-1);
 		}
 
@@ -23,7 +23,8 @@ public class MainDispatcherServer {
 		String tls_configs = args[1];
 		String keystores_configs = args[2];
 		String endpoints = args[3];
-		String token_verif = args[4];
+		String auth_token_verif = args[4];
+		String access_token_verif = args[5];
 
 		// Load KeyStores
 		MyKeyStore[] ks_stores = TLS_Utils.loadKeyStores(keystores_configs);
@@ -37,10 +38,11 @@ public class MainDispatcherServer {
 		String access_control_server = service_endpoints.getProperty("access-control-server");
 		String storage_server = service_endpoints.getProperty("storage-server");
 
-		TokenVerifier tokenVerifier = TokenVerifier.getVerifier(token_verif);
+		TokenVerifier authTokenVerifier = TokenVerifier.getVerifier(auth_token_verif);
+		TokenVerifier accessTokenVerifier = TokenVerifier.getVerifier(access_token_verif);
 
 		// Create Service Handler
-		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, tokenVerifier, ks, ks_password, ts);
+		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, authTokenVerifier, accessTokenVerifier, ks, ks_password, ts);
 
 		// Create HTTPS Server
 		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);

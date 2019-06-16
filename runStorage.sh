@@ -8,7 +8,8 @@ JAVA_ARGS="-Djava.net.preferIPv4Stack=true"
 PORT="9999"
 TLS="./configs/fServer/servertls.conf"
 KEYSTORE="./configs/fServer/storageServer/keystores.conf"
-TOKEN="./configs/fServer/token_verification.conf"
+AUTH_TOKEN="./configs/fServer/auth_token_verification.conf"
+ACCESS_TOKEN="./configs/fServer/access_token_verification.conf"
 DB="./Drive"
 
-$JAVA $JAVA_ARGS $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $TOKEN $DB $@
+$JAVA $JAVA_ARGS $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $AUTH_TOKEN $ACCESS_TOKEN $DB $@
