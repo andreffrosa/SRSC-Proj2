@@ -72,7 +72,6 @@ public class StorageImplementation implements StorageService {
 
 	@Override
 	public synchronized RestResponse listFiles(String auth_token, String access_token, long nonce, String username, String path) throws Exception {
-		System.out.println("nonce: " + nonce);
 		return processRequest(auth_token, access_token, username+path, AccessControler.READ_ACCESS_REQUEST, nonce, (auth) -> {
 			Path dirPath = buildPath(username, path);
 			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", listFiles(dirPath));
