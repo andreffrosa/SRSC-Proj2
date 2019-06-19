@@ -1,8 +1,5 @@
 package client.proxy.inodes;
 
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-
 public abstract class AbstractInode implements Inode {
 
 	protected DirectoryInode parent;
@@ -33,7 +30,6 @@ public abstract class AbstractInode implements Inode {
 
 	@Override
 	public String getPath() {
-		this.last_access = System.currentTimeMillis();
 		String d = (this.isDirectory() ? "/" : "");
 		return (parent == null ? "" : parent.getPath() + d) + this.name + d;
 	}

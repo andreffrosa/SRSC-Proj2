@@ -120,7 +120,7 @@ public class Test {
 		
 		System.out.println(MessageDigest.isEqual(data, data2));
 		
-		/*Map<String, String> map = fs.copy("/file1.txt", "/file2.txt");
+		Map<String, String> map = fs.copy("/file1.txt", "/file2.txt");
 		
 		for(Entry<String, String> m : map.entrySet()) {
 			System.out.println(m.getKey() + " -> " + m.getValue());
@@ -133,8 +133,14 @@ public class Test {
 		}
 		data2 = fs.assemble(fd, raw_fragments);
 		
-		System.out.println(MessageDigest.isEqual(data, data2));*/
+		System.out.println(MessageDigest.isEqual(data, data2));
 		
+		for(String s : fs.listFiles("/")) {
+			System.out.println(s);
+		}
+		
+		System.out.println(fs.getFileMetadata("/file1.txt"));
+		System.out.println(fs.getFileMetadata("/"));
 	}
 
 }
