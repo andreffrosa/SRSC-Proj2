@@ -19,6 +19,7 @@ public class Directory extends AbstractInode implements DirectoryInode {
 
 	@Override
 	public Map<String, Inode> getChildren() {
+		this.last_access = System.currentTimeMillis();
 		return children;
 	}
 
@@ -28,6 +29,8 @@ public class Directory extends AbstractInode implements DirectoryInode {
 		children.put(inode.getName(), inode);
 
 		inode.setParent(this);
+		
+		this.last_access = System.currentTimeMillis();
 	}
 
 	@Override
@@ -41,13 +44,16 @@ public class Directory extends AbstractInode implements DirectoryInode {
 			for(int i = 1; i < s.length-1; i++) {
 				d = (DirectoryInode) d.getChildren().get(s[i]);
 			}
-
-			return d.getChildren().get(s[s.length-1]);
+			
+			AbstractInode i =  (AbstractInode) d.getChildren().get(s[s.length-1]);
+            i.last_access = System.currentTimeMillis();
+			return i;
 		}
 	}
 
 	@Override
 	public Inode removeChild(String name) {
+		this.last_access = System.currentTimeMillis();
 		return children.remove(name);
 	}
 

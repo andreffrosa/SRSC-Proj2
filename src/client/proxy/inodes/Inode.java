@@ -10,6 +10,9 @@ public interface Inode {
 	
 	public boolean isDirectory();
 	
-	public Inode getCurrentDirectory();
+	public DirectoryInode getParent();
 	
+	public long getCreatedTime();
+	
+	public long getLastAccess();
 }

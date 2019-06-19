@@ -21,6 +21,7 @@ import java.util.Arrays;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -31,6 +32,12 @@ import javax.crypto.spec.PBEParameterSpec;
 
 public class Cryptography {
 
+	public static SecretKey generateSecretKey(String algorithm, String provider, int size) throws NoSuchAlgorithmException, NoSuchProviderException {
+		KeyGenerator generator = KeyGenerator.getInstance(algorithm, provider);
+		generator.init(size);
+		return generator.generateKey();
+	}
+	
 	public static long genNonce(SecureRandom sr) {
 		int size = Long.BYTES + 1;
 		byte[] tmp = new byte[size];
@@ -143,10 +150,9 @@ public class Cryptography {
         return new Cipher[] {cEnc, cDec};
 	}
 	
-	public static byte[] createIV(int blockSize) {
-		SecureRandom randomSecureRandom = new SecureRandom();
+	public static byte[] createIV(SecureRandom sr, int blockSize) {
 		byte[] iv = new byte[blockSize];
-		randomSecureRandom.nextBytes(iv);
+		sr.nextBytes(iv);
 		return iv;
 	}
 	
