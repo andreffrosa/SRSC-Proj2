@@ -9,6 +9,7 @@ import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
@@ -77,7 +78,7 @@ public class AuthTokenIssuer extends AbstractTokenIssuer {
 		// Generate new IV
 		byte[] iv = null;
 		if(this.useIv()) {
-			iv = Cryptography.createIV(this.getIv_size());
+			iv = Cryptography.createIV( new SecureRandom(), this.getIv_size());
 		} else {
 			iv = new byte[0];
 		}
