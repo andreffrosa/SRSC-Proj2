@@ -1,2 +1,2 @@
 user: allow read
-bina: none
+bina: allow read write	

@@ -300,11 +300,11 @@ public class ConsoleClient {
 	private static void mkdir(String current_path, Scanner in) {
 
 		String path = IO.resolvePath(current_path, in.nextLine().trim());
+		System.out.println("Path: " +path);
 
-		String dirName = String.format("%s/%s/", current_path, path);
 		try {
 
-			if (!client.mkdir(username, dirName))
+			if (!client.mkdir(username, path))
 				System.out.println("Impossible to create directory");
 
 		} catch (LogginRequieredException e) {
@@ -312,6 +312,7 @@ public class ConsoleClient {
 		} catch (UnautorizedException e) {
 			System.out.println("Error: You don't have permission for that operation");
 		} catch(Exception e) {
+			e.printStackTrace();
 			System.out.println("Unexpected error: " + e.getMessage());
 		}
 
@@ -350,7 +351,7 @@ public class ConsoleClient {
 		System.out.println("Upload file to path: put <file> <path>");
 		System.out.println("Download file: get <pathToFile>");
 		System.out.println("Copy file: cp <origin> <destination>");
-		System.out.println("Remove file: rm <pathToFile>");
+		System.out.println("Remove file: rm <pathToFile> <downloadDest>");
 		System.out.println("Remove Directory: rmdir <path>");
 		System.out.println("Get metadata: file <pathToFile>");
 	}
