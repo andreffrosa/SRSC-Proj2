@@ -1,4 +1,4 @@
-package fServer.storageServer;
+package fServer.storageServer.remote;
 
 import java.security.KeyStore;
 import java.security.MessageDigest;
