@@ -1,6 +1,7 @@
 package fServer.storageServer.dropbox;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -14,137 +15,59 @@ import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 
-import fServer.storageServer.StorageImplementation;
-import fServer.storageServer.StorageService;
+import fServer.accessControlServer.AccessControler;
+import fServer.storageServer.dropbox.msgs.CopyFileV2;
+import fServer.storageServer.dropbox.msgs.CreateFolderV2Args;
+import fServer.storageServer.dropbox.msgs.DeleteFileV2Args;
+import fServer.storageServer.dropbox.msgs.DownloadFileV2Args;
 import fServer.storageServer.dropbox.msgs.ListFolderContinueV2Args;
 import fServer.storageServer.dropbox.msgs.ListFolderV2Args;
 import fServer.storageServer.dropbox.msgs.ListFolderV2Return;
+import fServer.storageServer.dropbox.msgs.UploadFileV2Args;
 import rest.RestResponse;
+import token.TokenVerifier;
 import utility.JSON;
 
-public class DropboxStorage extends DropboxClient implements StorageService {
+public class DropboxStorage extends StorageDropboxClient{
 
+	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CREATE_FOLDER_V2_URL = "https://api.dropboxapi.com/2/files/create_folder_v2";
 	private static final String UPLOAD_FILE_V2_URL = "https://content.dropboxapi.com/2/files/upload";
 	private static final String DELETE_FILE_V2_URL = "https://api.dropboxapi.com/2/files/delete_v2";
 	private static final String DOWNLOAD_FILE_V2_URL = "https://content.dropboxapi.com/2/files/download";
 	private static final String LIST_FOLDER_V2_URL = "https://api.dropboxapi.com/2/files/list_folder";
 	private static final String LIST_FOLDER_CONTINUE_V2_URL = "https://api.dropboxapi.com/2/files/list_folder/continue";
-	private static final String MOVE_FOLDER_CONTINUE_V2_URL = "https://api.dropboxapi.com/2/files/move_batch";
+	private static final String COPY_FILE_V2_URL = "https://api.dropboxapi.com/2/files/copy_v2";
 
 	private static Logger logger = Logger.getLogger(DropboxStorage.class.toString());
 
 	String root;
 
-	public DropboxStorage(String root) {
-		super();
+	public DropboxStorage(String cloudProvider, String root, TokenVerifier authTokenVerifier, TokenVerifier accessTokenVerifier, MessageDigest hash_function) {
+		super(cloudProvider, accessTokenVerifier, accessTokenVerifier, hash_function);
 		this.root = root;
 	}
 
-	/*
-		@Override
-		public void checkAndCreateDirectory(String dir) {
-			OAuthRequest createFolder = new OAuthRequest(Verb.POST, CREATE_FOLDER_V2_URL);
-			createFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
 
-			createFolder.setPayload(JSON.encode(new CreateFolderV2Args(this.root + dir, false)));
+	//TODO: List encrypted
+	@Override
+	public RestResponse listFiles(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
 
-			service.signRequest(accessToken, createFolder);
 
-			try {
-				Response r = service.execute(createFolder);
+		return processRequest(auth_token, access_token, username+path, AccessControler.READ_ACCESS_REQUEST, nonce, (auth) -> {
 
-				if (r.isSuccessful()) {
-					logger.log(Level.INFO, "Dropbox directory was created with success");
-				} else {
-					logger.log(Level.WARNING, "createFolder: Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
-				}
-			} catch (InterruptedException | ExecutionException | IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		@Override
-		public boolean writeBlock(String dir, String blockId, byte[] content) {
-
-			String path = this.root + dir + "/" + blockId;
-
-			OAuthRequest uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_V2_URL);
-			uploadFile.addHeader("Content-Type", OCTET_STREAM_CONTENT_TYPE);
-			uploadFile.addHeader("Dropbox-API-Arg", JSON.encode(new UploadFileV2Args(path, "overwrite", false, true)));
-
-			uploadFile.setPayload(content);
-
-			service.signRequest(accessToken, uploadFile);
-
-			try {
-				Response r = service.execute(uploadFile);
-
-				if (r.getCode() == 200) {
-					logger.log(Level.INFO, "Dropbox file was uploaded with success");
-				} else {
-					logger.log(Level.WARNING, "uploadFile: Unexpected error HTTP: " + r.getCode());
-					throw new WebApplicationException(Status.CONFLICT);
-				}
-			} catch (InterruptedException | ExecutionException | IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-
-			return true;
-		}
-
-		@Override
-		public boolean deleteBlock(String dir, String blockId) {
-			String path = this.root + dir + "/" + blockId;
-
-			return delete(path);
-		}
-
-		@Override
-		public byte[] readBlock(String dir, String blockId) {
-
-			String path = this.root + dir + "/" + blockId;
-
-			OAuthRequest downloadFile = new OAuthRequest(Verb.POST, DOWNLOAD_FILE_V2_URL);
-			downloadFile.addHeader("Content-Type", OCTET_STREAM_CONTENT_TYPE);
-
-			downloadFile.addHeader("Dropbox-API-Arg", JSON.encode(new DownloadFileV2Args(path)));
-
-			service.signRequest(accessToken, downloadFile);
-
-			try {
-				Response r = service.execute(downloadFile);
-
-				if (r.getCode() == 200) {
-					logger.log(Level.INFO, "Dropbox file read with success");
-					return r.getBody().getBytes();
-				} else {
-					logger.log(Level.WARNING, "readFile " + path + " : Unexpected error HTTP: " + r.getCode());
-					throw new WebApplicationException(Status.NOT_FOUND);
-				}
-
-			} catch (InterruptedException | ExecutionException | IOException e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-
-		@Override
-		public List<String> listDirectory(String dir) {
-
-			String path = this.root + dir;
-
+			String fullPath =  String.format("%s/%s/%s", root, username, path);
 			OAuthRequest listFolder = new OAuthRequest(Verb.POST, LIST_FOLDER_V2_URL);
-			listFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
-			listFolder.setPayload(JSON.encode(new ListFolderV2Args(path, true)));
+			listFolder.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
+			listFolder.setPayload(JSON.encode(new ListFolderV2Args(fullPath, true)));
 
 			List<String> list = new LinkedList<>();
 
 			for (;;) {
-				service.signRequest(accessToken, listFolder);
 
+				service.signRequest(accessToken, listFolder);
 				Response r;
+
 				try {
 					r = service.execute(listFolder);
 
@@ -161,7 +84,7 @@ public class DropboxStorage extends DropboxClient implements StorageService {
 					if (result.has_more()) {
 						System.err.println("continuing...");
 						listFolder = new OAuthRequest(Verb.POST, LIST_FOLDER_CONTINUE_V2_URL);
-						listFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
+						listFolder.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
 						listFolder.setPayload(JSON.encode(new ListFolderContinueV2Args(result.getCursor())));
 					} else
 						break;
@@ -171,54 +94,180 @@ public class DropboxStorage extends DropboxClient implements StorageService {
 				}
 			}
 
-			return list;
-		}
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", list);
+		});
 
-		@Override
-		public boolean moveDirectory(String origin, String destiny) {
-			OAuthRequest moveFolder = new OAuthRequest(Verb.POST, MOVE_FOLDER_CONTINUE_V2_URL);
-			moveFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
+	}
 
-			List<String> temp = this.listDirectory(origin);
-			Entry[] entries = new Entry[temp.size()];
-			int counter = 0;
-			for(String s : temp ) {
-				entries[counter++] = new Entry( this.root + origin + "/" + s, this.root + destiny + "/" + s);
-			}
+	@Override
+	public RestResponse mkdir(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
+		return processRequest(auth_token, access_token, username+path, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
 
-			moveFolder.setPayload(JSON.encode(new MoveFolderV2Args( entries )));
+			OAuthRequest createFolder = new OAuthRequest(Verb.POST, CREATE_FOLDER_V2_URL);
+			createFolder.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
 
-			service.signRequest(accessToken, moveFolder);
+			createFolder.setPayload(JSON.encode(new CreateFolderV2Args(String.format("%s/%s/%s", root, username, path), false)));
+
+			service.signRequest(accessToken, createFolder);
 
 			try {
-				Response r = service.execute(moveFolder);
+				Response r = service.execute(createFolder);
 
-				if (r.getCode() == 200) {
-					logger.log(Level.INFO, "Dropbox file read with success");
-					return true;
+				if (r.isSuccessful()) {
+					logger.log(Level.INFO, "Dropbox directory was created with success");
+					return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", null);
 				} else {
-					logger.log(Level.WARNING, "moveFiles  " + origin + " to " + destiny + " : Unexpected error HTTP: " + r.getCode());
-					throw new WebApplicationException(Status.NOT_FOUND);
+					logger.log(Level.WARNING, "createFolder: Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
 				}
-
 			} catch (InterruptedException | ExecutionException | IOException e) {
 				e.printStackTrace();
 			}
 
-			return false;
-		}
+			return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "UnexepctedError", null);
+		});
+	}
 
-		@Override
-		public boolean deleteDirectory(String path) {
-			return delete(this.root + path);
-		}
+	@Override
+	public RestResponse upload(String auth_token, String access_token, long nonce, String username, String path, byte[] data)
+			throws Exception {
 
-		private boolean delete( String path ) {
+		return processRequest(auth_token, access_token, username+path, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
 
+			String fullPath = String.format("%s/%s/%s", root, username, path);
+
+			OAuthRequest uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_V2_URL);
+			uploadFile.addHeader("Content-Type", OCTET_STREAM_CONTENT_TYPE);
+			uploadFile.addHeader("Dropbox-API-Arg", JSON.encode(new UploadFileV2Args(fullPath, "overwrite", false, true)));
+
+			uploadFile.setPayload(data);
+
+			service.signRequest(accessToken, uploadFile);
+
+			try {
+				Response r = service.execute(uploadFile);
+
+				if (r.getCode() == 200) {
+					logger.log(Level.INFO, "Dropbox file was uploaded with success");
+
+				} else {
+					logger.log(Level.WARNING, "uploadFile: Unexpected error HTTP: " + r.getCode());
+					throw new WebApplicationException(Status.CONFLICT);
+				}
+			} catch (InterruptedException | ExecutionException | IOException e) {
+				e.printStackTrace();
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "ERROR", null);
+			}
+
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", null);
+		});
+	}
+
+	@Override
+	public RestResponse download(String auth_token, String access_token, long nonce, String username, String path) throws Exception {
+
+		return processRequest(auth_token, access_token, username+path, AccessControler.READ_ACCESS_REQUEST, nonce, (auth) -> {
+
+			String fullPath = String.format("%s/%s/%s", root, username, path);
+
+			OAuthRequest downloadFile = new OAuthRequest(Verb.POST, DOWNLOAD_FILE_V2_URL);
+			downloadFile.addHeader("Content-Type", OCTET_STREAM_CONTENT_TYPE);
+
+			downloadFile.addHeader("Dropbox-API-Arg", JSON.encode(new DownloadFileV2Args(fullPath)));
+
+			service.signRequest(accessToken, downloadFile);
+
+			try {
+				Response r = service.execute(downloadFile);
+
+				if (r.getCode() == 200) {
+					logger.log(Level.INFO, "Dropbox file read with success");
+					return  new RestResponse("1.0", Status.OK.getStatusCode(), "OK", r.getBody().getBytes());
+				} else {
+					logger.log(Level.WARNING, "readFile " + path + " : Unexpected error HTTP: " + r.getCode());
+					return new RestResponse("1.0", Status.NOT_FOUND.getStatusCode(), "Not Found", null);
+				}
+
+			} catch (InterruptedException | ExecutionException | IOException e) {
+				e.printStackTrace();
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error", null);
+			}
+		});
+	}
+
+	@Override
+	public RestResponse copy(String auth_token, String access_token, long nonce, String username, String src, String dest) throws Exception {
+
+		return processRequest(auth_token, access_token, username+src+dest, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
+
+			String srcPath = String.format("%s/%s/%s", root, username, src);
+			String destPath = String.format("%s/%s/%s", root, username, dest);
+
+			OAuthRequest copyFile = new OAuthRequest(Verb.POST, COPY_FILE_V2_URL);
+			copyFile.addHeader("Content-Type", JSON_CONTENT_TYPE);
+			copyFile.setPayload(JSON.encode(new CopyFileV2(srcPath, destPath, false, true, false)));
+
+			service.signRequest(accessToken, copyFile);
+
+			try {
+				Response r = service.execute(copyFile);
+
+				if (r.getCode() == 200) {
+					logger.log(Level.INFO, "Dropbox file was cpied with success");			
+				} else {
+					logger.log(Level.WARNING, "uploadFile: Unexpected error HTTP: " + r.getCode());
+					return new RestResponse("1.0", Status.CONFLICT.getStatusCode(), "Conflict", null);
+				}
+			} catch (InterruptedException | ExecutionException | IOException e) {
+				e.printStackTrace();
+				return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "ERROR", null);
+			}
+
+			return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", null);
+		});
+
+	}
+
+	@Override
+	public RestResponse remove(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
+		
+		String fullPath = String.format("%s/%s/%s", root, username, path);
+		return delete(auth_token, access_token, nonce, username, fullPath);
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public RestResponse removeDirectory(String auth_token, String access_token, long nonce, String username, String path)
+			throws Exception {
+		
+		String fullPath = String.format("%s/%s/%s", root, username, path);
+		List<String> contents = null;
+		RestResponse listResponse = listFiles(auth_token, access_token, nonce, username, path);
+
+		if (listResponse.getStatusCode() == Status.OK.getStatusCode()) { 
+			contents =  (List<String>) listResponse.getEntity(List.class);
+			if(contents.size() > 0)
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", false);
+			else
+				return delete(auth_token, access_token, nonce, username, fullPath);
+		}else
+			return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), Status.INTERNAL_SERVER_ERROR.getReasonPhrase(), "IOException");
+	}
+
+	@Override
+	public RestResponse getFileMetadata(String token, String access_token, long nonce, String username, String path)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private RestResponse delete( String auth_token, String access_token, long nonce, String username, String fullPath ) throws Exception {
+
+		return processRequest(auth_token, access_token, fullPath, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
 			OAuthRequest deleteFile = new OAuthRequest(Verb.POST, DELETE_FILE_V2_URL);
 			deleteFile.addHeader("Content-Type", JSON_CONTENT_TYPE);
 
-			deleteFile.setPayload(JSON.encode(new DeleteFileV2Args(path)));
+			deleteFile.setPayload(JSON.encode(new DeleteFileV2Args(fullPath)));
 
 			service.signRequest(accessToken, deleteFile);
 
@@ -227,111 +276,18 @@ public class DropboxStorage extends DropboxClient implements StorageService {
 
 				if (r.getCode() == 200) {
 					logger.log(Level.INFO, "Dropbox file deleted with success");
-					return true;
+					return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", null);
 				} else {
-					logger.log(Level.WARNING, "deleteFile " + path + " : Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
-					return false;
+					logger.log(Level.WARNING, "deleteFile " + fullPath + " : Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
+					return new RestResponse("1.0", r.getCode(), "Error", null);
 				}
 			} catch (InterruptedException | ExecutionException | IOException e) {
 				e.printStackTrace();
 			}
 
-			return false;
-		}
-	 */
-	@Override
-	public RestResponse listFiles(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
+			return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error", null);
 
-
-		String fullPath = this.root + StorageImplementation.buildPath(fullPath, fullPath) ;
-
-		OAuthRequest listFolder = new OAuthRequest(Verb.POST, LIST_FOLDER_V2_URL);
-		listFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
-		listFolder.setPayload(JSON.encode(new ListFolderV2Args(path, true)));
-
-		List<String> list = new LinkedList<>();
-
-		for (;;) {
-			service.signRequest(accessToken, listFolder);
-
-			Response r;
-			try {
-				r = service.execute(listFolder);
-
-				if (r.getCode() != 200)
-					throw new RuntimeException("Failed: " + r.getMessage());
-
-				ListFolderV2Return result = JSON.decode(r.getBody(), ListFolderV2Return.class);
-
-				result.getEntries().forEach(e -> {
-					if (e.isFile())
-						list.add(e.getName());
-				});
-
-				if (result.has_more()) {
-					System.err.println("continuing...");
-					listFolder = new OAuthRequest(Verb.POST, LIST_FOLDER_CONTINUE_V2_URL);
-					listFolder.addHeader("Content-Type", JSON_CONTENT_TYPE);
-					listFolder.setPayload(JSON.encode(new ListFolderContinueV2Args(result.getCursor())));
-				} else
-					break;
-			} catch (InterruptedException | ExecutionException | IOException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Failed");
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public RestResponse mkdir(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse upload(String token, String access_token, long nonce, String username, String path, byte[] data)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse download(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse copy(String token, String access_token, long nonce, String username, String src, String dest)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse remove(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse removeDirectory(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public RestResponse getFileMetadata(String token, String access_token, long nonce, String username, String path)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		});
 	}
 
 }

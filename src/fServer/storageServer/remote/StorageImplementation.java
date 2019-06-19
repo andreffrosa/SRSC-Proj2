@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fServer.storageServer;
+package fServer.storageServer.remote;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,12 +18,10 @@ import java.util.List;
 import javax.ws.rs.core.Response.Status;
 
 import fServer.accessControlServer.AccessControler;
+import fServer.storageServer.StorageAbstract;
+import fServer.storageServer.StorageService;
 import rest.RestResponse;
 import token.TokenVerifier;
-import token.access.AccessToken;
-import token.auth.AuthenticationToken;
-import utility.Cryptography;
-import utility.RequestHandler;
 
 /**
  * @author Ruben & Andre
@@ -31,44 +29,15 @@ import utility.RequestHandler;
  *This class is an implementation of the Storage Service.
  *
  */
-public class StorageImplementation implements StorageService {
+public class StorageImplementation extends StorageAbstract implements StorageService {
 
-	private TokenVerifier authTokenVerifier;
-	private TokenVerifier accessTokenVerifier;
-	private MessageDigest hash_function;
 	private String dbPath;
 
 	public StorageImplementation(String dbPath, TokenVerifier authTokenVerifier, TokenVerifier accessTokenVerifier, MessageDigest hash_function) {
-		this.authTokenVerifier = authTokenVerifier;
-		this.accessTokenVerifier = accessTokenVerifier;
-		this.hash_function = hash_function;
+		super(authTokenVerifier, accessTokenVerifier, hash_function);
 		this.dbPath = dbPath;
 	}
 
-	private synchronized boolean verifyIntegrity(byte[] rcv_hash, String op_params, String op_type, long nonce) {
-		String data = op_params + op_type + nonce;
-		byte[] computed_hash = Cryptography.digest(hash_function, data.getBytes());
-
-		return MessageDigest.isEqual(rcv_hash, computed_hash);
-	}
-
-	private synchronized <K,T> RestResponse processRequest(String auth_token, String access_token, String op_params, String op_type, long nonce, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
-		AuthenticationToken auth = AuthenticationToken.parseToken(auth_token, null);
-		if(authTokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
-
-			AccessToken ac_token = AccessToken.parseToken(access_token);
-			if(accessTokenVerifier.validateToken(System.currentTimeMillis(), ac_token)) {
-				if(verifyIntegrity(ac_token.getHash(), op_params, op_type, nonce))
-					return requestHandler.execute(auth);
-				else
-					return new RestResponse("1.0", 403, "Forbidden", "Invalid Access Token: hash is different!".getBytes());
-			} else {
-				return new RestResponse("1.0", 403, "Forbidden", "Invalid Access Token!".getBytes());
-			}
-		} else {
-			return new RestResponse("1.0", 403, "Forbidden", "Invalid Authentication Token!".getBytes());
-		}
-	}
 
 	@Override
 	public synchronized RestResponse listFiles(String auth_token, String access_token, long nonce, String username, String path) throws Exception {
