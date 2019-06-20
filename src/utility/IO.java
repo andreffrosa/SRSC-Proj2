@@ -34,15 +34,12 @@ public class IO {
 			if (current_folder.equals("..")) {
 				final_path = final_p.getParent().toString();
 				final_p = Paths.get(final_path);
-				System.out.println("1" + final_path);
 			} else if (current_folder.equals(".")) {
 				final_path = final_p.toString();
 				final_p = Paths.get(final_path);
-				System.out.println("2" + final_path);
 			} else {
 				final_path = final_p.resolve(current_folder).toString();
 				final_p = Paths.get(final_path);
-				System.out.println("3" + final_path);
 			}
 		}
 		if(path.endsWith("/"))
