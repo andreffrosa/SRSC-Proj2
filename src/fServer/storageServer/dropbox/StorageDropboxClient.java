@@ -3,6 +3,7 @@ package fServer.storageServer.dropbox;
 import java.awt.Desktop;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.security.MessageDigest;
 
@@ -25,20 +26,20 @@ public abstract class StorageDropboxClient extends CloudStorage {
 	private static final String apiKey = "8pyl8ao463ljg3h";
 	private static final String apiSecret = "tv05dt8uu38kvyp";
 
-	protected static final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
+	protected static final String JSON_CONTENT_TYPE = "application/json";
 	protected static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
 
 	protected OAuth20Service service;
 	protected OAuth2AccessToken accessToken;
 
-	private static final String TOKEN_FILE = "/home/srsc/tokenFile";
+	private static final String TOKEN_FILE = "./tokenFile";
 
 	protected StorageDropboxClient(String cloudProvider, TokenVerifier authTokenVerifier, TokenVerifier accessTokenVerifier, MessageDigest hash_function) {
-		
-		super(cloudProvider, accessTokenVerifier, accessTokenVerifier, hash_function);
+
+		super(cloudProvider, authTokenVerifier, accessTokenVerifier, hash_function);
 		try {
-			
-			
+
+
 			OAuthCallbackServlet.start(this);
 
 			service = new ServiceBuilder()
@@ -47,15 +48,18 @@ public abstract class StorageDropboxClient extends CloudStorage {
 					.callback(OAuthCallbackServlet.CALLBACK_URI)
 					.build(DropboxApi20.INSTANCE);
 
-			FileInputStream fis = new FileInputStream(TOKEN_FILE);
-			byte[] b = new byte[1024];
-			int n = fis.read(b);
-			fis.close();
-			String token = new String(b, 0, n);
+			String token = null;
 
-			accessToken = JSON.decode(token, OAuth2AccessToken.class);
-
-			if (accessToken == null) {
+			try {
+				
+				FileInputStream fis = new FileInputStream(TOKEN_FILE);
+				byte[] b = new byte[1024];
+				int n = fis.read(b);
+				fis.close();
+				token = new String(b, 0, n);
+				accessToken = JSON.decode(token, OAuth2AccessToken.class);
+			
+			}catch (IOException e) {
 				String authorizationURL = service.getAuthorizationUrl();
 				System.out.println("Open the following URL in a browser:\n" + authorizationURL);
 

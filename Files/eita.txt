@@ -1,0 +1,11 @@
+Para correr a nossa solu��o, basta executar os scripts .sh . No entanto, � necess�rio primeiro compilar o projeto mySecureREST para um ficheiro .jar. Para isto, basta correr o seguinte comando na directoria deste projecto (� necess�rio ter o maven instalado): 
+
+"mvn package"
+
+De seguida, � necess�rio compilar o Projeto-2, utilizando o seguinte comando na directoria desse projecto:
+
+"mvn compile"
+
+Por fim, basta correr os ficheiros .sh (n�o necesstiam de argumentos).
+
+Todas as configura��es j� est�o a ser passadas nos ficheiros .sh e podem ser facilmente consultadas com qualquer editor de texto.

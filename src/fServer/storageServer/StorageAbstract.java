@@ -2,6 +2,8 @@ package fServer.storageServer;
 
 import java.security.MessageDigest;
 
+import javax.ws.rs.core.Response.Status;
+
 import rest.RestResponse;
 import token.TokenVerifier;
 import token.access.AccessToken;
@@ -31,18 +33,21 @@ public abstract class StorageAbstract implements StorageService {
 	protected synchronized <K,T> RestResponse processRequest(String auth_token, String access_token, String op_params, String op_type, long nonce, RequestHandler<AuthenticationToken, RestResponse> requestHandler) throws Exception {
 		AuthenticationToken auth = AuthenticationToken.parseToken(auth_token, null);
 		if(authTokenVerifier.validateToken(System.currentTimeMillis(), auth)) {
-
 			AccessToken ac_token = AccessToken.parseToken(access_token);
 			if(accessTokenVerifier.validateToken(System.currentTimeMillis(), ac_token)) {
 				if(verifyIntegrity(ac_token.getHash(), op_params, op_type, nonce))
 					return requestHandler.execute(auth);
-				else
+				else {
+					System.out.println("Integridade fdd");
 					return new RestResponse("1.0", 403, "Forbidden", "Invalid Access Token: hash is different!".getBytes());
+				}
 			} else {
+				System.out.println("accesso invalid");
 				return new RestResponse("1.0", 403, "Forbidden", "Invalid Access Token!".getBytes());
 			}
 		} else {
-			return new RestResponse("1.0", 403, "Forbidden", "Invalid Authentication Token!".getBytes());
+			System.out.println("Login violado");
+			return new RestResponse("1.0", Status.UNAUTHORIZED.getStatusCode(), "UnAuthorized", "Invalid Authentication Token!".getBytes());
 		}
 	}
 	

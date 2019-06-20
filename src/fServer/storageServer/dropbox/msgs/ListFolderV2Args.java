@@ -2,7 +2,7 @@ package fServer.storageServer.dropbox.msgs;
 
 public class ListFolderV2Args {
 	final String path;
-	final boolean recursive, include_media_info, include_deleted, include_has_explicit_shared_members, include_mounted_folders;
+	final boolean recursive, include_media_info, include_deleted, include_has_explicit_shared_members, include_mounted_folders, include_non_downloadable_files;
 	
 	public ListFolderV2Args(String path, boolean recursive) {
 		this.path = path;
@@ -11,5 +11,6 @@ public class ListFolderV2Args {
 		this.include_deleted = false;
 		this.include_mounted_folders = false;
 		this.include_has_explicit_shared_members = false;
+		this.include_non_downloadable_files = false;
 	}	
 }

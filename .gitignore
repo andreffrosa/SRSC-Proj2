@@ -451,3 +451,4 @@ buildNumber.properties
 
 # End of https://www.gitignore.io/api/latex,linux,maven,eclipse,intellij
 /SRSC-Proj2.iml
+/tokenFile
