@@ -1,4 +1,4 @@
-package fServer.authServer;
+package fServer.authServer.exceptions;
 
 public class DeniedAccessException extends Exception {
 

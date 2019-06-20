@@ -25,6 +25,11 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 
+import fServer.authServer.exceptions.DeniedAccessException;
+import fServer.authServer.exceptions.WrongChallengeAnswerException;
+import fServer.authServer.models.EnvelopedToken;
+import fServer.authServer.models.SessionEstablishmentParameters;
+import fServer.authServer.protocols.DiffieHellman;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
 import token.ExpiredTokenException;
@@ -56,8 +61,11 @@ public class AuthenticationClient {
 
 	public static RestResponse post_requestToken(mySecureRestClient client, String resource_path, String username, long client_nonce, byte[] credentials)
 			throws UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
-		return client.newRequest(resource_path).addPathParam("requestToken")
-				.addPathParam(username).addQueryParam("client_nonce", "" + client_nonce)
+		
+		return client.newRequest(resource_path)
+				.addPathParam("requestToken")
+				.addPathParam(username)
+				.addQueryParam("client_nonce", "" + client_nonce)
 				.post(credentials);
 	}
 

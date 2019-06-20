@@ -29,7 +29,8 @@ public interface AccessControler {
 	public static final String READ_ACCESS_REQUEST = "read";
 	
 	/**
-	 * Used to assure if a user can read files or not.
+	 * Used to assure if a user can read/write files or not. 
+	 * 
 	 * @return True if the user can read files, False otherwise.
 	 * @throws SignatureException 
 	 * @throws InvalidKeyException 

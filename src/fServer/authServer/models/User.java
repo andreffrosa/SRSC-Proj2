@@ -1,4 +1,4 @@
-package fServer.authServer;
+package fServer.authServer.models;
 
 import java.io.IOException;
 import java.nio.file.Files;

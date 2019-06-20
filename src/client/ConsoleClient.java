@@ -12,8 +12,8 @@ import client.exception.FileNotFoundException;
 import client.exception.LogginRequieredException;
 import client.exception.UnautorizedException;
 import client.proxy.EncryptedFileSystem;
-import fServer.authServer.DeniedAccessException;
-import fServer.authServer.WrongChallengeAnswerException;
+import fServer.authServer.exceptions.DeniedAccessException;
+import fServer.authServer.exceptions.WrongChallengeAnswerException;
 import token.ExpiredTokenException;
 import utility.IO;
 import utility.LoginUtility;
@@ -64,14 +64,9 @@ public class ConsoleClient {
 
 		client = new EncryptedRemoteFileServiceClient(encrypted_fs_configs, kstores[0].getKeystore(), kstores[0].getPassword(),
 		kstores[1].getKeystore(), location, login_util);
-		
-		/*client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
-				kstores[1].getKeystore(), location, login_util);*/
-
-		/////////////////////////////////////////////////////////////////////////////////////////////
-		
+			
 		Scanner in = new Scanner(System.in);
-
+		
 		String current_path = "";
 		boolean logedIn = false;
 
@@ -160,6 +155,7 @@ public class ConsoleClient {
 	private static void getFileData(String current_path, Scanner in) {
 		String fileName = IO.resolvePath(current_path, in.nextLine().trim());
 		String bfa = null;
+		
 		try {
 			bfa = client.getFileMetadata(username, fileName);
 		
@@ -174,7 +170,7 @@ public class ConsoleClient {
 		}
 		
 		if(bfa != null) {
-			System.out.println(bfa.toString()); //check if this is good
+			System.out.println(bfa.toString());
 		}
 	}
 
@@ -217,7 +213,6 @@ public class ConsoleClient {
 		String dest = IO.resolvePath(current_path, in.nextLine().trim());
 
 		try {
-			
 			client.copy(username, src, dest);
 			
 		} catch (LogginRequieredException e) {
@@ -235,7 +230,6 @@ public class ConsoleClient {
 
 		String remote_file = IO.resolvePath(current_path, in.next().trim());
 		String local_file = IO.resolvePath(LOCAL_STORAGE, in.nextLine().trim());
-
 		byte[] data = null;
 
 		try {
@@ -254,30 +248,18 @@ public class ConsoleClient {
 			Files.write(Paths.get(local_file), data);
 		else
 			System.out.println("File not found");
-
-		/*String fileName = IO.resolvePath(current_path, in.nextLine());
-		Path localFilePath = Paths.get(LOCAL_STORAGE, fileName);
-		byte[] data = client.download(username, String.format("%s/%s", current_path, fileName));
-
-		if (data != null)
-			Files.write(localFilePath, data);
-		else
-			System.out.println("File not found");*/
 	}
 
 	private static void upload(String current_path, Scanner in) {
 
 		String local_file = IO.resolvePath(LOCAL_STORAGE, in.next().trim());
 		String remote_file = IO.resolvePath(current_path, in.nextLine().trim());
-
-		System.out.println(local_file);
-		System.out.println(remote_file);
 		byte[] data = null;
+		
 		try {
 			Path p = Paths.get(local_file);
 			if (Files.exists(p) && Files.isReadable(p))
 				data = Files.readAllBytes(p);
-
 			client.upload(username, remote_file, data);
 		} catch (IOException e) {
 			System.out.println("Could Not Found File " + local_file);
@@ -288,31 +270,13 @@ public class ConsoleClient {
 		} catch(Exception e) {
 			System.out.println("Unexpected error: " + e.getMessage());
 		}
-
-
-		/*String fileName = IO.resolvePath("./", in.nextLine());
-		Path localFilePath = Paths.get(String.format("%s/%s", LOCAL_STORAGE, fileName));
-		byte[] data = null;
-		try {
-			if (Files.exists(localFilePath) && Files.isReadable(localFilePath))
-				data = Files.readAllBytes(localFilePath);
-			System.out.println(new String(data));
-			System.out.println(String.format("%s/%s", current_path, fileName));
-			client.upload(username, String.format("%s/%s", current_path, fileName), data);
-		} catch (IOException e) {
-			System.out.println("Could Not Found File " + fileName);
-		}
-		 */
-
 	}
 
 	private static void mkdir(String current_path, Scanner in) {
 
 		String path = IO.resolvePath(current_path, in.nextLine().trim());
-		System.out.println("Path: " +path);
 
 		try {
-
 			if (!client.mkdir(username, path))
 				System.out.println("Impossible to create directory");
 
@@ -330,7 +294,6 @@ public class ConsoleClient {
 	private static void listFiles(String current_path, Scanner in) {
 
 		List<String> files;
-
 		String path = in.nextLine();
 
 		try {
@@ -352,26 +315,7 @@ public class ConsoleClient {
 			System.out.println("Unexpected error: " + e.getMessage());
 		}
 	}
-
-	private static void listCmds() {
-		System.out.println("Change directory: cd <path>");
-		System.out.println("List files: ls");
-		System.out.println("New Directory: mkdir <path>");
-		System.out.println("Upload file to path: put <file> <path>");
-		System.out.println("Download file: get <pathToFile>");
-		System.out.println("Copy file: cp <origin> <destination>");
-		System.out.println("Remove file: rm <pathToFile> <downloadDest>");
-		System.out.println("Remove Directory: rmdir <path>");
-		System.out.println("Get metadata: file <pathToFile>");
-	}
-
-
-	private static String changeDir(Scanner in, String current_path) {
-		String path = in.nextLine().trim();
-
-		return IO.resolvePath(current_path, path);
-	}
-
+	
 	private static String login(Scanner in) {
 
 		String username = in.nextLine().trim();
@@ -398,5 +342,21 @@ public class ConsoleClient {
 
 		return result ? username : null;
 	}
-
+	
+	private static void listCmds() {
+		System.out.println("Change directory: cd <path>");
+		System.out.println("List files: ls");
+		System.out.println("New Directory: mkdir <path>");
+		System.out.println("Upload file to path: put <file> <path>");
+		System.out.println("Download file: get <pathToFile>");
+		System.out.println("Copy file: cp <origin> <destination>");
+		System.out.println("Remove file: rm <pathToFile> <downloadDest>");
+		System.out.println("Remove Directory: rmdir <path>");
+		System.out.println("Get metadata: file <pathToFile>");
+	}
+	
+	private static String changeDir(Scanner in, String current_path) {
+		String path = in.nextLine().trim();
+		return IO.resolvePath(current_path, path);
+	}
 }

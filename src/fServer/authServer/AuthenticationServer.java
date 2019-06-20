@@ -3,6 +3,8 @@ package fServer.authServer;
 import java.security.KeyStore;
 import java.util.Map;
 
+import fServer.authServer.models.User;
+import fServer.authServer.protocols.DiffieHellman;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
 import token.auth.AuthTokenIssuer;

@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response.Status;
 import fServer.accessControlServer.AccessControler;
 import fServer.authServer.AuthenticationClient;
 import fServer.authServer.AuthenticatorService;
-import fServer.authServer.DeniedAccessException;
+import fServer.authServer.exceptions.DeniedAccessException;
 import fServer.storageServer.StorageService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
@@ -61,6 +61,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 	@Override
 	public synchronized RestResponse requestSession(String username)
 			throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, UnsupportedEncodingException, UnknownHostException, IOException, DeniedAccessException {
+		
 		client.setLocation(auth_server_location);
 		return AuthenticationClient.get_requestSession(client, AuthenticatorService.PATH, username);
 	}
@@ -124,6 +125,7 @@ public class MainDispatcherImplementation implements RemoteFileService, Authenti
 		int index = (int) Math.floor(Math.random() * storage_servers_location.length);
 		return storage_servers_location[index];
 	}
+	
 
 	//main functionalities implementation
 	@Override

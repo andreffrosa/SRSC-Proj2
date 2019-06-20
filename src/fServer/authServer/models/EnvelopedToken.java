@@ -1,4 +1,4 @@
-package fServer.authServer;
+package fServer.authServer.models;
 
 public class EnvelopedToken {
 

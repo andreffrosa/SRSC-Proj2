@@ -26,7 +26,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 
-import fServer.authServer.User;
+import fServer.authServer.models.User;
 import token.AbstractTokenIssuer;
 import utility.Cryptography;
 import utility.IO;
