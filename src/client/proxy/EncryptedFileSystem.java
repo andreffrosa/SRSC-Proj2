@@ -1,11 +1,8 @@
 package client.proxy;
 
-<<<<<<< HEAD
+
 import java.io.FileReader;
 import java.io.FileWriter;
-=======
-import java.io.FileOutputStream;
->>>>>>> branch 'master' of https://github.com/andreffrosa/SRSC-Proj2.git
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
