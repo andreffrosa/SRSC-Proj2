@@ -146,6 +146,7 @@ public class ConsoleClient {
 					exit = true;
 					break;
 				default:
+					in.nextLine();
 					System.out.println(UNSUPPORTED_OPERATION);
 					listCmds();
 				}
