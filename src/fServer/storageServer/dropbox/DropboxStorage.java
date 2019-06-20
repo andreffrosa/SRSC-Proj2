@@ -46,6 +46,32 @@ public class DropboxStorage extends StorageDropboxClient{
 	public DropboxStorage(String cloudProvider, String root, TokenVerifier authTokenVerifier, TokenVerifier accessTokenVerifier, MessageDigest hash_function) {
 		super(cloudProvider, authTokenVerifier, accessTokenVerifier, hash_function);
 		this.root = root;
+		mkdir("/"+root);
+	}
+
+	private RestResponse mkdir(String path) {
+		
+		OAuthRequest createFolder = new OAuthRequest(Verb.POST, CREATE_FOLDER_V2_URL);
+		createFolder.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
+		createFolder.setPayload(JSON.encode(new CreateFolderV2Args(path, false)));
+
+		service.signRequest(accessToken, createFolder);
+
+		try {
+			Response r = service.execute(createFolder);
+
+			if (r.isSuccessful()) {
+				logger.log(Level.INFO, "Dropbox directory was created with success");
+				return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
+			} else {
+				logger.log(Level.WARNING, "createFolder: Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
+			}
+		} catch (InterruptedException | ExecutionException | IOException e) {
+			e.printStackTrace();
+		}
+
+		return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "UnexepctedError", null);
+		
 	}
 
 	@Override
@@ -61,27 +87,8 @@ public class DropboxStorage extends StorageDropboxClient{
 		return processRequest(auth_token, access_token, username+path, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
 
 			String fullPath = "/"+root+"/"+username+path;
+			return mkdir(fullPath);
 			
-			OAuthRequest createFolder = new OAuthRequest(Verb.POST, CREATE_FOLDER_V2_URL);
-			createFolder.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
-			createFolder.setPayload(JSON.encode(new CreateFolderV2Args(fullPath, false)));
-
-			service.signRequest(accessToken, createFolder);
-
-			try {
-				Response r = service.execute(createFolder);
-
-				if (r.isSuccessful()) {
-					logger.log(Level.INFO, "Dropbox directory was created with success");
-					return new RestResponse("1.0", Status.OK.getStatusCode(), "OK", true);
-				} else {
-					logger.log(Level.WARNING, "createFolder: Unexpected error HTTP: " + r.getCode() + "\n" + r.getBody());
-				}
-			} catch (InterruptedException | ExecutionException | IOException e) {
-				e.printStackTrace();
-			}
-
-			return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "UnexepctedError", null);
 		});
 	}
 
