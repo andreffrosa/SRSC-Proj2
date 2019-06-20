@@ -48,7 +48,10 @@ public class EncryptedFileSystem implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private static final String JSON_FILE_PATH = "./configs/client/state";
+	
+	private String state_file;
+	private MyKeyStore files_keystore;
+	
 	private String secret_key_gen_algorithm;
 	private String secret_key_gen_provider;
 	private int secret_key_size;
@@ -65,7 +68,7 @@ public class EncryptedFileSystem implements Serializable {
 	private int fragment_size;
 	private int encrypted_payload_size;
 
-	public EncryptedFileSystem(int fragment_size, String secret_key_gen_algorithm, String secret_key_gen_provider, int secret_key_size,
+	public EncryptedFileSystem(MyKeyStore files_keystore, String state_file, int fragment_size, String secret_key_gen_algorithm, String secret_key_gen_provider, int secret_key_size,
 			int iv_size, String cipher_algorithm, String cipher_provider, Signature sig, KeyPair myKeyPair,
 			MessageDigest hash_function, SecureRandom sr) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException {
 		this.root = new Directory(""); // Root does not have a name
@@ -82,6 +85,9 @@ public class EncryptedFileSystem implements Serializable {
 		this.myKeyPair = myKeyPair;
 		this.hash_function = hash_function;
 		this.sr = sr;
+		
+		this.files_keystore = files_keystore;
+		this.state_file = state_file;
 
 		// TODO: Discover a smartest way to do this
 		SecretKey ks = Cryptography.generateSecretKey(this.secret_key_gen_algorithm, this.secret_key_gen_provider, this.secret_key_size);
@@ -92,8 +98,7 @@ public class EncryptedFileSystem implements Serializable {
 	public void store() {
 		
 		try {
-			FileWriter fileWriter = new FileWriter(JSON_FILE_PATH);
-			MyKeyStore files_keystore = new MyKeyStore("./configs/client/files-keystore.pkcs12", "SRSC1819", "pkcs12");
+			FileWriter fileWriter = new FileWriter(this.state_file);
 			
 			Queue<Inode> queue = new LinkedList<Inode>();
 			
@@ -135,24 +140,22 @@ public class EncryptedFileSystem implements Serializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (KeyStoreException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (NoSuchAlgorithmException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (CertificateException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
 	}
 	
-	public static EncryptedFileSystem load(String statePath, String keyStorePath, String keyStorePassword, String keyStoreType) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
-		EncryptedFileSystem fs = EncryptedFileSystem.fromConfig(configs);
+	public static EncryptedFileSystem load(MyKeyStore files_keystore, String state_path, int fragment_size, String secret_key_gen_algorithm, String secret_key_gen_provider, int secret_key_size,
+			int iv_size, String cipher_algorithm, String cipher_provider, Signature sig, KeyPair myKeyPair,
+			MessageDigest hash_function, SecureRandom sr) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
+		EncryptedFileSystem fs = new EncryptedFileSystem(files_keystore, state_path, fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
 		
 		try {
-			FileReader fileReader = new FileReader(statePath);
-			MyKeyStore files_keystore = new MyKeyStore(keyStorePath, keyStorePassword, keyStoreType);
+			FileReader fileReader = new FileReader(state_path);
 			
 			Scanner in = new Scanner(fileReader);
 			
@@ -210,19 +213,7 @@ public class EncryptedFileSystem implements Serializable {
 			
 		} catch (java.io.FileNotFoundException e) {
 
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 	
+		} 
 		
 		return fs;
 	}
@@ -267,7 +258,6 @@ public class EncryptedFileSystem implements Serializable {
 			}
 		}
 
-		// TODO: o que fazer?*/
 		return false;
 	}
 
@@ -301,7 +291,7 @@ public class EncryptedFileSystem implements Serializable {
 			}
 		}
 
-		return null; // TODO Throw uma excepção qualquer
+		return null;
 	}
 
 	public client.proxy.inodes.FileDescriptor getFileDescriptor(String path) throws FileNotFoundException {
@@ -363,7 +353,7 @@ public class EncryptedFileSystem implements Serializable {
 			}
 		}
 
-		return null; // TODO: O que fazer?
+		return null; 
 	}
 
 	public List<String> remove(String path) throws FileNotFoundException {
@@ -454,18 +444,16 @@ public class EncryptedFileSystem implements Serializable {
 
 		MyKeyStore ks = new MyKeyStore(keystore_location, keystore_password, keystore_type);
 		KeyStore.PrivateKeyEntry e = (PrivateKeyEntry) ks.getEntry(certificate_alias);
-
 		KeyPair myKeyPair = new KeyPair(e.getCertificate().getPublicKey(), e.getPrivateKey());
 		
-		
-		String statePath = properties.getProperty("STATE-FILE-PATH");
+		String state_path = properties.getProperty("STATE-FILE-PATH");
 		String fileSystemKeyStorePath = properties.getProperty("FILE-SYSTEM-KEYSTORE-PATH");
 		String pass = properties.getProperty("FILE-SYSTEM-KEYSTORE-PASSWORD");
 		String fileSystemKeysStoreType = properties.getProperty("FILE-SYSTEM-KEYSTORE-TYPE");
 		
-		return load(statePath, fileSystemKeyStorePath, pass, fileSystemKeysStoreType);
-		//return new EncryptedFileSystem(fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
+		MyKeyStore files_keystore = new MyKeyStore(fileSystemKeyStorePath, pass, fileSystemKeysStoreType);
+		
+		return load(files_keystore, state_path, fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
 	}
 	
-
 }

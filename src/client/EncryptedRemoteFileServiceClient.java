@@ -58,7 +58,7 @@ public class EncryptedRemoteFileServiceClient{
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 		this.authToken = null;
 		this.login_util = login_util;
-		this.fs = EncryptedFileSystem.load(fs_configs);
+		this.fs = EncryptedFileSystem.fromConfig(fs_configs);
 	}
 
 	private <K, T> T processRequest(RequestHandler<String, T> requestHandler) {
