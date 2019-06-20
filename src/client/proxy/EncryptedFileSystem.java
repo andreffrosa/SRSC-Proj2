@@ -1,9 +1,8 @@
 package client.proxy;
 
-import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -19,6 +18,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,8 +50,7 @@ public class EncryptedFileSystem implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
-	private static final String FILE_PATH = "./configs/client/state";
+	private static final String JSON_FILE_PATH = "./configs/client/state";
 	private String secret_key_gen_algorithm;
 	private String secret_key_gen_provider;
 	private int secret_key_size;
@@ -91,6 +90,46 @@ public class EncryptedFileSystem implements Serializable {
 		byte[] iv = Cryptography.createIV(sr, this.iv_size);
 		this.encrypted_payload_size = getCipher(ks, iv, Cipher.ENCRYPT_MODE).getOutputSize(fragment_size);
 	}
+	
+	public void store() {
+		
+		try {
+			FileWriter fileWriter = new FileWriter(JSON_FILE_PATH);
+			for(Inode node: root.getChildren().values()) {
+				if(node.isDirectory())
+					fileWriter.write(node.getName()+"\n");
+				else {
+					FileDescriptor fd = (FileDescriptor) node;
+					fileWriter.write(fd.getName() + "\n");
+					for(FragmentMetaData df: fd.getFragmentsMetaData()) { 
+						fileWriter.write(Base64.getEncoder().encodeToString(df.iv)+"\n");
+					}
+				}
+				fileWriter.write("\n");
+			}
+			fileWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static EncryptedFileSystem load() {
+		
+		try {
+			FileReader fileReader = new FileReader(JSON_FILE_PATH);
+			
+			
+		} catch (java.io.FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+		
+	}
+	
+	
 
 	private Cipher getCipher(SecretKey ks, byte[] iv, int mode) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException {
 		if(this.cipher_provider != null)
@@ -233,9 +272,9 @@ public class EncryptedFileSystem implements Serializable {
 
 		FileDescriptor fd = this.getFileDescriptor(path);
 		fd.getParent().removeChild(fd.getName());
-
+		
 		FragmentMetaData[] meta = fd.getFragmentsMetaData();
-
+		
 		List<String> fragments = new ArrayList<>(meta.length);
 		for(FragmentMetaData m : meta) {
 			fragments.add(m.name);
@@ -300,7 +339,7 @@ public class EncryptedFileSystem implements Serializable {
 			hash_function = MessageDigest.getInstance(hash_alg, hash_provider);
 		else
 			hash_function = MessageDigest.getInstance(hash_alg);
-
+		
 		String sr_alg = properties.getProperty("SECURE-RANDOM-ALGORITHM", "sha1PRNG");
 		String sr_provider = properties.getProperty("SECURE-RANDOM-PROVIDER");
 		SecureRandom sr = null;
@@ -308,7 +347,7 @@ public class EncryptedFileSystem implements Serializable {
 			sr = SecureRandom.getInstance(sr_alg, sr_provider);
 		else
 			sr = SecureRandom.getInstance(sr_alg);
-
+		
 		String keystore_location = properties.getProperty("KEYSTORE-PATH");
 		String keystore_type = properties.getProperty("KEYSTORE-TYPE");
 		String keystore_password = properties.getProperty("KEYSTORE-PASSWORD");
@@ -321,23 +360,6 @@ public class EncryptedFileSystem implements Serializable {
 
 		return new EncryptedFileSystem(fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
 	}
+	
 
-	public static EncryptedFileSystem fromJson(String jsonContent) {
-		return JSON.decode(jsonContent, EncryptedFileSystem.class);
-	}
-
-	public static void store(EncryptedFileSystem fs) {
-
-		try {
-			FileOutputStream fileOut =  new FileOutputStream(FILE_PATH);
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(fs);
-			out.close();
-			fileOut.close();
-			System.out.printf("Serialized data is saved in /tmp/employee.ser");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
 }

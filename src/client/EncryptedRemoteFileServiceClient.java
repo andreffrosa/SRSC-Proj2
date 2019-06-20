@@ -118,7 +118,7 @@ public class EncryptedRemoteFileServiceClient{
 	public boolean upload(String username, String path, byte[] data) throws LogginRequieredException, UnautorizedException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException, FileNotFoundException {
 		
 		DataFragment[] fragments = fs.write(path, data);
-		EncryptedFileSystem.store(fs);
+		fs.store();
 		
 		for(DataFragment f : fragments) {
 			String nonce = "" + Cryptography.genNonce(login_util.getRandom());
