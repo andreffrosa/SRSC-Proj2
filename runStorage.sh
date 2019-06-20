@@ -12,4 +12,4 @@ AUTH_TOKEN="./configs/fServer/auth_token_verification.conf"
 ACCESS_TOKEN="./configs/fServer/access_token_verification.conf"
 DB="./Drive"
 
-$JAVA $JAVA_ARGS $CP fServer.storageServer.StorageServer $PORT $TLS $KEYSTORE $AUTH_TOKEN $ACCESS_TOKEN $DB $@
+$JAVA $JAVA_ARGS $CP fServer.storageServer.remote.StorageServer $PORT $TLS $KEYSTORE $AUTH_TOKEN $ACCESS_TOKEN $DB $@

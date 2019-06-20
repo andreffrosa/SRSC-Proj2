@@ -11,6 +11,7 @@ import java.util.Scanner;
 import client.exception.FileNotFoundException;
 import client.exception.LogginRequieredException;
 import client.exception.UnautorizedException;
+import client.proxy.EncryptedFileSystem;
 import fServer.authServer.DeniedAccessException;
 import fServer.authServer.WrongChallengeAnswerException;
 import token.ExpiredTokenException;
@@ -42,27 +43,35 @@ public class ConsoleClient {
 	private static final String EXIT = "exit";
 	private static final String LOCAL_STORAGE = "./Files";
 
-	static RemoteFileServiceClient client;
+	static EncryptedRemoteFileServiceClient client;
 	static String username;
 
 	public static void main(String[] args) throws Exception {
 
-		if (args.length < 3) {
-			System.err.println("Usage: ConsoleClient <server-location> <keystore-configs> <login-configs>");
+		if (args.length < 4) {
+			System.err.println("Usage: ConsoleClient <server-location> <keystore-configs> <login-configs> <encrypted-fs-confgis>");
 			System.exit(-1);
 		}
 
 		String location = args[0];
 		String ks_path = args[1];
 		String login_configs = args[2];
+		String encrypted_fs_configs = args[3];
 
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
 		LoginUtility login_util = LoginUtility.fromConfig(login_configs);
+		
+		EncryptedFileSystem fs = EncryptedFileSystem.fromConfig(encrypted_fs_configs);
 
-		client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
-				kstores[1].getKeystore(), location, login_util);
+		client = new EncryptedRemoteFileServiceClient(fs, kstores[0].getKeystore(), kstores[0].getPassword(),
+		kstores[1].getKeystore(), location, login_util);
+		
+		/*client = new RemoteFileServiceClient(kstores[0].getKeystore(), kstores[0].getPassword(),
+				kstores[1].getKeystore(), location, login_util);*/
 
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		
 		Scanner in = new Scanner(System.in);
 
 		String current_path = "";
@@ -83,7 +92,7 @@ public class ConsoleClient {
 			if (!logedIn) {
 				switch (cmd) {
 				case LOGIN:
-					username = login(in, client);
+					username = login(in);
 					if (username != null) {
 						current_path = "/";
 						logedIn = true;
@@ -362,7 +371,7 @@ public class ConsoleClient {
 		return IO.resolvePath(current_path, path);
 	}
 
-	private static String login(Scanner in, RemoteFileServiceClient client) {
+	private static String login(Scanner in) {
 
 		String username = in.nextLine().trim();
 		System.out.print(String.format("Enter password for %s : ", username));

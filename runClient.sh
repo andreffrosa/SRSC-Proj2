@@ -8,5 +8,6 @@ JAVA_ARGS="-Djava.net.preferIPv4Stack=true"
 SERVER="https://localhost:8888/"
 KEYSTORES="./configs/client/keystores.conf"
 LOGIN="./configs/client/login.conf"
+ENCRYPTED_FS="./configs/client/encrypted-file-system.conf"
 
-$JAVA $JAVA_ARGS $CP client.ConsoleClient $SERVER $KEYSTORES $LOGIN $@
+$JAVA $JAVA_ARGS $CP client.ConsoleClient $SERVER $KEYSTORES $LOGIN $ENCRYPTED_FS $@

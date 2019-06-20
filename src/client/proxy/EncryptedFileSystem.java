@@ -224,12 +224,19 @@ public class EncryptedFileSystem {
 		return null; // TODO: O que fazer?
 	}
 
-	public boolean remove(String path) throws FileNotFoundException {
+	public List<String> remove(String path) throws FileNotFoundException {
 
 		FileDescriptor fd = this.getFileDescriptor(path);
 		fd.getParent().removeChild(fd.getName());
+		
+		FragmentMetaData[] meta = fd.getFragmentsMetaData();
+		
+		List<String> fragments = new ArrayList<>(meta.length);
+		for(FragmentMetaData m : meta) {
+			fragments.add(m.name);
+		}
 
-		return true;
+		return fragments;
 	}
 
 	public boolean removeDirectory(String path) throws FileNotFoundException {
@@ -271,10 +278,10 @@ public class EncryptedFileSystem {
 		int secret_key_size = Integer.parseInt(properties.getProperty("SECRET-KEY-SIZE", "256"));
 		int iv_size = Integer.parseInt(properties.getProperty("IV-SIZE", "16"));
 		String cipher_algorithm = properties.getProperty("CIPHER-ALGORITHM", "AES/CBC/PKCS5Padding");
-		String cipher_provider = properties.getProperty("CIPHER-PROVIDER", "BC");
+		String cipher_provider = properties.getProperty("CIPHER-PROVIDER");
 
 		String signature_alg = properties.getProperty("SIGNATURE-ALGORITHM", "SHA512withRSA");
-		String signature_provider = properties.getProperty("SIGNATURE-PROVIDER", "BC");
+		String signature_provider = properties.getProperty("SIGNATURE-PROVIDER");
 		Signature sig = null;
 		if(signature_provider != null)
 			sig = Signature.getInstance(signature_alg, signature_provider);
@@ -282,7 +289,7 @@ public class EncryptedFileSystem {
 			sig = Signature.getInstance(signature_alg);
 
 		String hash_alg = properties.getProperty("HASH-ALGORITHM", "SHA-512");
-		String hash_provider = properties.getProperty("HASH-PROVIDER", "BC");
+		String hash_provider = properties.getProperty("HASH-PROVIDER");
 		MessageDigest hash_function = null;
 		if(hash_provider != null)
 			hash_function = MessageDigest.getInstance(hash_alg, hash_provider);
@@ -290,7 +297,7 @@ public class EncryptedFileSystem {
 			hash_function = MessageDigest.getInstance(hash_alg);
 		
 		String sr_alg = properties.getProperty("SECURE-RANDOM-ALGORITHM", "sha1PRNG");
-		String sr_provider = properties.getProperty("SECURE-RANDOM-ALGORITHM", "JCE");
+		String sr_provider = properties.getProperty("SECURE-RANDOM-PROVIDER");
 		SecureRandom sr = null;
 		if(sr_provider != null)
 			sr = SecureRandom.getInstance(sr_alg, sr_provider);
