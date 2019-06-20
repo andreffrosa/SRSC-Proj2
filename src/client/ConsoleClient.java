@@ -182,13 +182,13 @@ public class ConsoleClient {
 		String dirName = IO.resolvePath(current_path, in.nextLine().trim());
 		try {
 			if(!client.removeDirectory(username, dirName))
-				System.out.println("Error Deleting file: " + dirName);
+				System.out.println("Error Deleting directory: " + dirName);
 		} catch (LogginRequieredException e) {
 			System.out.println("Error: You are not logged in.");
 		} catch (UnautorizedException e) {
 			System.out.println("Error: You don't have permission for that operation");
 		} catch (FileNotFoundException e) {
-			System.out.println("Error: That file does not exist.");
+			System.out.println("Error: That directory does not exist.");
 		}catch(Exception e) {
 			System.out.println("Unexpected error: " + e.getMessage());
 		}
