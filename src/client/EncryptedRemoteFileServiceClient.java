@@ -118,6 +118,7 @@ public class EncryptedRemoteFileServiceClient{
 	public boolean upload(String username, String path, byte[] data) throws LogginRequieredException, UnautorizedException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException, FileNotFoundException {
 		
 		DataFragment[] fragments = fs.write(path, data);
+		EncryptedFileSystem.store(fs);
 		
 		for(DataFragment f : fragments) {
 			String nonce = "" + Cryptography.genNonce(login_util.getRandom());
@@ -134,6 +135,7 @@ public class EncryptedRemoteFileServiceClient{
 			
 			// TODO: O que fazer quando dá erro? Ir ao fs e apagar?
 			if (response.getStatusCode() == Status.OK.getStatusCode()) {
+				
 				//return (boolean) response.getEntity(boolean.class);
 			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				fs.remove(path);

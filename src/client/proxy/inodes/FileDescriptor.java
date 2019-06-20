@@ -1,8 +1,5 @@
 package client.proxy.inodes;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
 import javax.crypto.SecretKey;
 
 public class FileDescriptor extends AbstractInode implements FileInode {
