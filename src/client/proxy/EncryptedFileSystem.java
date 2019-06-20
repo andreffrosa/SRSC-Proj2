@@ -1,31 +1,29 @@
 package client.proxy;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.KeyStore.PrivateKeyEntry;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.security.KeyStore.PrivateKeyEntry;
-import java.security.KeyStoreException;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Map.Entry;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -43,10 +41,17 @@ import client.proxy.inodes.FileDescriptor.FragmentMetaData;
 import client.proxy.inodes.Inode;
 import utility.Cryptography;
 import utility.IO;
+import utility.JSON;
 import utility.MyKeyStore;
 
-public class EncryptedFileSystem {
+public class EncryptedFileSystem implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static final String FILE_PATH = "./configs/client/state";
 	private String secret_key_gen_algorithm;
 	private String secret_key_gen_provider;
 	private int secret_key_size;
@@ -228,9 +233,9 @@ public class EncryptedFileSystem {
 
 		FileDescriptor fd = this.getFileDescriptor(path);
 		fd.getParent().removeChild(fd.getName());
-		
+
 		FragmentMetaData[] meta = fd.getFragmentsMetaData();
-		
+
 		List<String> fragments = new ArrayList<>(meta.length);
 		for(FragmentMetaData m : meta) {
 			fragments.add(m.name);
@@ -295,7 +300,7 @@ public class EncryptedFileSystem {
 			hash_function = MessageDigest.getInstance(hash_alg, hash_provider);
 		else
 			hash_function = MessageDigest.getInstance(hash_alg);
-		
+
 		String sr_alg = properties.getProperty("SECURE-RANDOM-ALGORITHM", "sha1PRNG");
 		String sr_provider = properties.getProperty("SECURE-RANDOM-PROVIDER");
 		SecureRandom sr = null;
@@ -303,7 +308,7 @@ public class EncryptedFileSystem {
 			sr = SecureRandom.getInstance(sr_alg, sr_provider);
 		else
 			sr = SecureRandom.getInstance(sr_alg);
-		
+
 		String keystore_location = properties.getProperty("KEYSTORE-PATH");
 		String keystore_type = properties.getProperty("KEYSTORE-TYPE");
 		String keystore_password = properties.getProperty("KEYSTORE-PASSWORD");
@@ -317,4 +322,22 @@ public class EncryptedFileSystem {
 		return new EncryptedFileSystem(fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
 	}
 
+	public static EncryptedFileSystem fromJson(String jsonContent) {
+		return JSON.decode(jsonContent, EncryptedFileSystem.class);
+	}
+
+	public static void store(EncryptedFileSystem fs) {
+
+		try {
+			FileOutputStream fileOut =  new FileOutputStream(FILE_PATH);
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(fs);
+			out.close();
+			fileOut.close();
+			System.out.printf("Serialized data is saved in /tmp/employee.ser");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 }

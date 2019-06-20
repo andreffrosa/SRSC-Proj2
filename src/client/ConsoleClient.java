@@ -137,6 +137,7 @@ public class ConsoleClient {
 					getFileData(current_path, in);
 					break;
 				case LOGOUT:
+					
 					client.logout();
 					username = "";
 					current_path = "";
