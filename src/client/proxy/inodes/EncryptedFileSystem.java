@@ -1,5 +1,4 @@
-package client.proxy;
-
+package client.proxy.inodes;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -22,9 +21,13 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Queue;
+import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -34,15 +37,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 
 import client.exception.FileNotFoundException;
-import client.proxy.inodes.DataFragment;
-import client.proxy.inodes.Directory;
-import client.proxy.inodes.DirectoryInode;
-import client.proxy.inodes.FileDescriptor;
 import client.proxy.inodes.FileDescriptor.FragmentMetaData;
-import client.proxy.inodes.Inode;
 import utility.Cryptography;
 import utility.IO;
-import utility.JSON;
 import utility.MyKeyStore;
 
 public class EncryptedFileSystem implements Serializable {
@@ -96,38 +93,138 @@ public class EncryptedFileSystem implements Serializable {
 		
 		try {
 			FileWriter fileWriter = new FileWriter(JSON_FILE_PATH);
-			for(Inode node: root.getChildren().values()) {
-				if(node.isDirectory())
-					fileWriter.write(node.getName()+"\n");
-				else {
-					FileDescriptor fd = (FileDescriptor) node;
-					fileWriter.write(fd.getName() + "\n");
-					for(FragmentMetaData df: fd.getFragmentsMetaData()) { 
-						fileWriter.write(Base64.getEncoder().encodeToString(df.iv)+"\n");
+			MyKeyStore files_keystore = new MyKeyStore("./configs/client/files-keystore.pkcs12", "SRSC1819", "pkcs12");
+			
+			Queue<Inode> queue = new LinkedList<Inode>();
+			
+			queue.add(root);
+			
+			while(!queue.isEmpty()) {
+				Inode i = queue.remove();
+				
+				fileWriter.write(i.getPath()+"\n");
+				fileWriter.write(""+i.isDirectory()+"\n");
+				fileWriter.write(""+i.getCreatedTime()+"\n");
+				fileWriter.write(""+i.getLastAccess()+"\n");
+				
+				if(i.isDirectory()) {
+					for(Entry<String, Inode> e : ((DirectoryInode)i).getChildren().entrySet()) {
+						queue.add(e.getValue());
+					}
+				} else {
+					FileDescriptor fd = (FileDescriptor) i;
+					FragmentMetaData[] meta = fd.getFragmentsMetaData();
+					
+					fileWriter.write(meta.length + "\n");
+					
+					for(FragmentMetaData m: meta) { 
+						fileWriter.write(m.name);
+						fileWriter.write(" ");
+						fileWriter.write(Base64.getEncoder().encodeToString(m.iv)+"\n");
+						files_keystore.setKey(m.name, m.ks);
 					}
 				}
+				
 				fileWriter.write("\n");
 			}
+			
 			fileWriter.close();
+			
+			files_keystore.store();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (KeyStoreException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (NoSuchAlgorithmException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (CertificateException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		
 	}
 	
-	public static EncryptedFileSystem load() {
+	public static EncryptedFileSystem load(String configs) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
+		EncryptedFileSystem fs = EncryptedFileSystem.fromConfig(configs);
 		
 		try {
 			FileReader fileReader = new FileReader(JSON_FILE_PATH);
+			MyKeyStore files_keystore = new MyKeyStore("./configs/client/files-keystore.pkcs12", "SRSC1819", "pkcs12");
 			
+			Scanner in = new Scanner(fileReader);
+			
+			while(in.hasNextLine()) {
+				String path = in.nextLine();
+				boolean isDirectory = Boolean.parseBoolean(in.nextLine());
+				
+				long created = Long.parseLong(in.nextLine());
+				long last_access = Long.parseLong(in.nextLine());
+				
+				AbstractInode ai = null;
+				if(isDirectory) {
+					
+					if(!path.equals(fs.root.getPath())) {
+						java.io.File f = new java.io.File(path);
+						Inode i = fs.root.getInode(f.getParent());
+						ai = new client.proxy.inodes.Directory(f.getName());
+						((DirectoryInode)i).addChild(ai);
+					} else
+						ai = (AbstractInode) fs.root;
+				} else {
+					java.io.File f = new java.io.File(path);
+					Inode i = fs.root.getInode(f.getParent());
+
+					if(i!= null) {
+						if(i.isDirectory()) {
+							int n_fragments = Integer.parseInt(in.nextLine());
+
+							FragmentMetaData[] fragments_meta = new FragmentMetaData[n_fragments];
+
+							for(int j = 0; j < n_fragments; j++) {
+								String[] frag = in.nextLine().split(" ");
+								
+								String name = frag[0];
+								byte[] iv = java.util.Base64.getDecoder().decode(frag[1]);
+								SecretKey ks = files_keystore.getKey(name);
+
+								fragments_meta[j] = new client.proxy.inodes.FileDescriptor.FragmentMetaData(name, ks, iv);
+							}
+							ai = new client.proxy.inodes.FileDescriptor(f.getName(), fragments_meta);
+							((DirectoryInode)i).addChild(ai);
+						}
+					}
+				}
+				
+				ai.create_time = created;
+				ai.last_access = last_access;
+				
+				in.nextLine();
+			}
+			
+			in.close();
+			
+			return fs;
 			
 		} catch (java.io.FileNotFoundException e) {
+
+		} catch (KeyStoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
-		}
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CertificateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 	
 		
-		
+		return fs;
 	}
 	
 	

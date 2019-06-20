@@ -11,7 +11,7 @@ import java.util.Scanner;
 import client.exception.FileNotFoundException;
 import client.exception.LogginRequieredException;
 import client.exception.UnautorizedException;
-import client.proxy.EncryptedFileSystem;
+import client.proxy.inodes.EncryptedFileSystem;
 import fServer.authServer.exceptions.DeniedAccessException;
 import fServer.authServer.exceptions.WrongChallengeAnswerException;
 import token.ExpiredTokenException;
@@ -61,10 +61,8 @@ public class ConsoleClient {
 		MyKeyStore[] kstores = TLS_Utils.loadKeyStores(ks_path);
 
 		LoginUtility login_util = LoginUtility.fromConfig(login_configs);
-		
-		EncryptedFileSystem fs = EncryptedFileSystem.fromConfig(encrypted_fs_configs);
 
-		client = new EncryptedRemoteFileServiceClient(fs, kstores[0].getKeystore(), kstores[0].getPassword(),
+		client = new EncryptedRemoteFileServiceClient(encrypted_fs_configs, kstores[0].getKeystore(), kstores[0].getPassword(),
 		kstores[1].getKeystore(), location, login_util);
 			
 		Scanner in = new Scanner(System.in);

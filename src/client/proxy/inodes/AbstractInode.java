@@ -31,7 +31,7 @@ public abstract class AbstractInode implements Inode {
 	@Override
 	public String getPath() {
 		String d = (this.isDirectory() ? "/" : "");
-		return (parent == null ? "" : parent.getPath() + d) + this.name + d;
+		return (parent == null ? "" : parent.getPath()) + this.name + d;
 	}
 
 	@Override
