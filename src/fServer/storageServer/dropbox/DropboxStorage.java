@@ -46,7 +46,7 @@ public class DropboxStorage extends StorageDropboxClient{
 	public DropboxStorage(String cloudProvider, String root, TokenVerifier authTokenVerifier, TokenVerifier accessTokenVerifier, MessageDigest hash_function) {
 		super(cloudProvider, authTokenVerifier, accessTokenVerifier, hash_function);
 		this.root = root;
-		mkdir(root);
+		mkdir("/"+root);
 	}
 
 	private RestResponse mkdir(String path) {
