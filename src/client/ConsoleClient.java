@@ -11,7 +11,7 @@ import java.util.Scanner;
 import client.exception.FileNotFoundException;
 import client.exception.LogginRequieredException;
 import client.exception.UnautorizedException;
-import client.proxy.EncryptedFileSystem;
+import client.proxy.inodes.EncryptedFileSystem;
 import fServer.authServer.exceptions.DeniedAccessException;
 import fServer.authServer.exceptions.WrongChallengeAnswerException;
 import token.ExpiredTokenException;

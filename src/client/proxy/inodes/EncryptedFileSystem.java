@@ -1,4 +1,4 @@
-package client.proxy;
+package client.proxy.inodes;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -38,12 +38,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 
 import client.exception.FileNotFoundException;
-import client.proxy.inodes.DataFragment;
-import client.proxy.inodes.Directory;
-import client.proxy.inodes.DirectoryInode;
-import client.proxy.inodes.FileDescriptor;
 import client.proxy.inodes.FileDescriptor.FragmentMetaData;
-import client.proxy.inodes.Inode;
 //import fServer.storageServer.dropbox.msgs.MoveFolderV2Args.Entry;
 import utility.Cryptography;
 import utility.IO;
@@ -112,6 +107,8 @@ public class EncryptedFileSystem implements Serializable {
 				
 				fileWriter.write(i.getPath()+"\n");
 				fileWriter.write(""+i.isDirectory()+"\n");
+				fileWriter.write(""+i.getCreatedTime()+"\n");
+				fileWriter.write(""+i.getLastAccess()+"\n");
 				
 				if(i.isDirectory()) {
 					for(Entry<String, Inode> e : ((DirectoryInode)i).getChildren().entrySet()) {
@@ -166,13 +163,19 @@ public class EncryptedFileSystem implements Serializable {
 				String path = in.nextLine();
 				boolean isDirectory = Boolean.parseBoolean(in.nextLine());
 				
+				long created = Long.parseLong(in.nextLine());
+				long last_access = Long.parseLong(in.nextLine());
+				
+				AbstractInode ai = null;
 				if(isDirectory) {
 					
 					if(!path.equals(fs.root.getPath())) {
 						java.io.File f = new java.io.File(path);
 						Inode i = fs.root.getInode(f.getParent());
-						((DirectoryInode)i).addChild(new client.proxy.inodes.Directory(f.getName()));
-					}
+						ai = new client.proxy.inodes.Directory(f.getName());
+						((DirectoryInode)i).addChild(ai);
+					} else
+						ai = (AbstractInode) fs.root;
 				} else {
 					java.io.File f = new java.io.File(path);
 					Inode i = fs.root.getInode(f.getParent());
@@ -182,8 +185,6 @@ public class EncryptedFileSystem implements Serializable {
 							int n_fragments = Integer.parseInt(in.nextLine());
 
 							FragmentMetaData[] fragments_meta = new FragmentMetaData[n_fragments];
-							String[] names = new String[n_fragments];
-							Cipher[] ciphers = new Cipher[n_fragments];
 
 							for(int j = 0; j < n_fragments; j++) {
 								String[] frag = in.nextLine().split(" ");
@@ -194,10 +195,14 @@ public class EncryptedFileSystem implements Serializable {
 
 								fragments_meta[j] = new client.proxy.inodes.FileDescriptor.FragmentMetaData(name, ks, iv);
 							}
-							((DirectoryInode)i).addChild(new client.proxy.inodes.FileDescriptor(f.getName(), fragments_meta));
+							ai = new client.proxy.inodes.FileDescriptor(f.getName(), fragments_meta);
+							((DirectoryInode)i).addChild(ai);
 						}
 					}
 				}
+				
+				ai.create_time = created;
+				ai.last_access = last_access;
 				
 				in.nextLine();
 			}
