@@ -21,6 +21,22 @@ public class ArrayUtil {
 		String s = ""
 	}*/
 	
+	public static String[] unparseString(String array) {
+		if(array == null)
+			return null;
+
+		String aux = array.substring(1, array.length()-1);
+		String s[] = aux.split(",");
+
+		String[] result = new String[s.length];
+
+		for(int i = 0; i < s.length; i++) {
+			result[i] = s[i].trim();
+		}
+
+		return result;
+	}
+	
 	public static byte[] unparse(String array) {
 		if(array == null)
 			return null;
