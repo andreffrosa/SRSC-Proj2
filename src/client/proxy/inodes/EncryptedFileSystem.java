@@ -2,7 +2,6 @@ package client.proxy.inodes;
 
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
@@ -39,10 +38,8 @@ import javax.crypto.ShortBufferException;
 
 import client.exception.FileNotFoundException;
 import client.proxy.inodes.FileDescriptor.FragmentMetaData;
-//import fServer.storageServer.dropbox.msgs.MoveFolderV2Args.Entry;
 import utility.Cryptography;
 import utility.IO;
-import utility.JSON;
 import utility.MyKeyStore;
 
 public class EncryptedFileSystem implements Serializable {

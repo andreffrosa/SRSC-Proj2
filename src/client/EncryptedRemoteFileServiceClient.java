@@ -78,10 +78,12 @@ public class EncryptedRemoteFileServiceClient{
 		throw new RuntimeException("Aborted request! Too many tries...");
 	}
 
-	public boolean login(String username, String password) throws ExpiredTokenException, WrongChallengeAnswerException, DeniedAccessException {
+	public boolean login(String username, String password) throws ExpiredTokenException, fServer.authServer.exceptions.WrongChallengeAnswerException, fServer.authServer.exceptions.DeniedAccessException {
 
 		try {
+
 			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, login_util);
+
 			return true;
 
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException
@@ -133,7 +135,10 @@ public class EncryptedRemoteFileServiceClient{
 			});
 			
 			// TODO: O que fazer quando dá erro? Ir ao fs e apagar?
-			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if (response.getStatusCode() == Status.OK.getStatusCode()) {
+				
+				//return (boolean) response.getEntity(boolean.class);
+			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				fs.remove(path);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
@@ -170,6 +175,7 @@ public class EncryptedRemoteFileServiceClient{
 			});
 		
 			if (response.getStatusCode() == Status.OK.getStatusCode()) {
+				//return (byte[]) response.getEntity(byte[].class);
 				raw_fragments[i] = (byte[]) response.getEntity(byte[].class);
 			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				throw new LogginRequieredException("Invalid Loggin.\n");
@@ -203,7 +209,9 @@ public class EncryptedRemoteFileServiceClient{
 						.put(null);
 			});
 		
-			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if (response.getStatusCode() == Status.OK.getStatusCode()) {
+				//return (boolean) response.getEntity(boolean.class);
+			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				fs.remove(dest);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
@@ -239,7 +247,9 @@ public class EncryptedRemoteFileServiceClient{
 						.delete(null);
 			});
 			
-			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if (response.getStatusCode() == 200) {
+				//return (boolean) response.getEntity(boolean.class);
+			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
 				throw new UnautorizedException("Access denied.\n");
