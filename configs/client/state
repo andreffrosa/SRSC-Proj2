@@ -1,5 +1,6 @@
 /
 true
+<<<<<<< HEAD
 1561062367431
 1561062387613
 
@@ -9,4 +10,20 @@ false
 1561062387613
 1
 bbKOdCeluZz9iwnbonWXfPPjJRqSv4DZLo4VBnAEvLA= adf718x4HT50l8LBrmWZrg==
+=======
+1561062110104
+1561062128757
+
+/file1.txt
+false
+1561062128757
+1561062128757
+1
+rmNb52LErUMyC-HCufLCF-aD8kpOVlQ9a4i6z-2oUic= 7nH6IrSW6/jNPP+pt6qllQ==
+
+/homework/
+true
+1561062120073
+1561062120073
+>>>>>>> branch 'master' of https://github.com/andreffrosa/SRSC-Proj2.git
 
