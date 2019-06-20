@@ -23,6 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import fServer.authServer.exceptions.DeniedAccessException;
 import rest.RestResponse;
 
 @Path(AuthenticatorService.PATH)

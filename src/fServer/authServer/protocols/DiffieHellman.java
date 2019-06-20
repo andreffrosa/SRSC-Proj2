@@ -1,4 +1,4 @@
-package fServer.authServer;
+package fServer.authServer.protocols;
 
 import java.io.IOException;
 import java.math.BigInteger;

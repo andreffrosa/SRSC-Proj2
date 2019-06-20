@@ -31,8 +31,8 @@ import client.proxy.inodes.DataFragment;
 import client.proxy.inodes.FileDescriptor;
 import client.proxy.inodes.FileDescriptor.FragmentMetaData;
 import fServer.authServer.AuthenticationClient;
-import fServer.authServer.DeniedAccessException;
-import fServer.authServer.WrongChallengeAnswerException;
+import fServer.authServer.exceptions.DeniedAccessException;
+import fServer.authServer.exceptions.WrongChallengeAnswerException;
 import fServer.mainDispatcher.RemoteFileService;
 import rest.RestResponse;
 import rest.client.mySecureRestClient;
@@ -81,9 +81,7 @@ public class EncryptedRemoteFileServiceClient{
 	public boolean login(String username, String password) throws ExpiredTokenException, WrongChallengeAnswerException, DeniedAccessException {
 
 		try {
-
 			authToken = AuthenticationClient.login(client, RemoteFileService.PATH, username, password, login_util);
-
 			return true;
 
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException
@@ -134,10 +132,7 @@ public class EncryptedRemoteFileServiceClient{
 			});
 			
 			// TODO: O que fazer quando dá erro? Ir ao fs e apagar?
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				
-				//return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				fs.remove(path);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
@@ -174,7 +169,6 @@ public class EncryptedRemoteFileServiceClient{
 			});
 		
 			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				//return (byte[]) response.getEntity(byte[].class);
 				raw_fragments[i] = (byte[]) response.getEntity(byte[].class);
 			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				throw new LogginRequieredException("Invalid Loggin.\n");
@@ -207,9 +201,7 @@ public class EncryptedRemoteFileServiceClient{
 						.put(null);
 			});
 		
-			if (response.getStatusCode() == Status.OK.getStatusCode()) {
-				//return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				fs.remove(dest);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
@@ -244,9 +236,7 @@ public class EncryptedRemoteFileServiceClient{
 						.delete(null);
 			});
 			
-			if (response.getStatusCode() == 200) {
-				//return (boolean) response.getEntity(boolean.class);
-			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+			if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
 				throw new UnautorizedException("Access denied.\n");

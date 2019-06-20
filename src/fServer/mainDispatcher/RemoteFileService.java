@@ -10,11 +10,8 @@ import javax.ws.rs.Path;
  *
  */
 
-//TODO: Register, Exceptions a enviar
-
 @Path(RemoteFileService.PATH)
 public interface RemoteFileService {
 
 	String PATH = "/dispatcher";
-
 }

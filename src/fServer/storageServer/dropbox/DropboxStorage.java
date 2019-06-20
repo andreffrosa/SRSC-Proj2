@@ -48,21 +48,17 @@ public class DropboxStorage extends StorageDropboxClient{
 		this.root = root;
 	}
 
-
-	//TODO: List encrypted
 	@Override
 	public RestResponse listFiles(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
 
 		return processRequest(auth_token, access_token, username+path, AccessControler.READ_ACCESS_REQUEST, nonce, (auth) -> {
 			return list(username, path);
 		});
-
 	}
 
 	@Override
 	public RestResponse mkdir(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
 		return processRequest(auth_token, access_token, username+path, AccessControler.WRITE_ACCESS_REQUEST, nonce, (auth) -> {
-
 
 			String fullPath = "/"+root+"/"+username+path;
 			
@@ -133,7 +129,6 @@ public class DropboxStorage extends StorageDropboxClient{
 
 			OAuthRequest downloadFile = new OAuthRequest(Verb.POST, DOWNLOAD_FILE_V2_URL);
 			downloadFile.addHeader("Content-Type", OCTET_STREAM_CONTENT_TYPE);
-
 			downloadFile.addHeader("Dropbox-API-Arg", JSON.encode(new DownloadFileV2Args(fullPath)));
 
 			service.signRequest(accessToken, downloadFile);
@@ -193,7 +188,6 @@ public class DropboxStorage extends StorageDropboxClient{
 	public RestResponse remove(String auth_token, String access_token, long nonce, String username, String path)	throws Exception {
 		
 		String fullPath = "/"+root+"/"+username+path;
-		System.out.println("Full Path: " + fullPath);
 		return delete(auth_token, access_token, nonce, fullPath);
 
 	}
@@ -224,7 +218,7 @@ public class DropboxStorage extends StorageDropboxClient{
 	@Override
 	public RestResponse getFileMetadata(String token, String access_token, long nonce, String username, String path)
 			throws Exception {		
-		// TODO Auto-generated method stub
+		//Dropbox doesn't support this operation.
 		return null;
 	}
 
@@ -232,7 +226,6 @@ public class DropboxStorage extends StorageDropboxClient{
 
 		OAuthRequest deleteFile = new OAuthRequest(Verb.POST, DELETE_FILE_V2_URL);
 		deleteFile.addHeader("Content-Type", JSON_CONTENT_TYPE);
-
 		deleteFile.setPayload(JSON.encode(new DeleteFileV2Args(fullPath)));
 
 		service.signRequest(accessToken, deleteFile);
@@ -252,8 +245,6 @@ public class DropboxStorage extends StorageDropboxClient{
 		}
 
 		return new RestResponse("1.0", Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error", null);
-
-
 	}
 
 	private RestResponse list(String username, String path) {

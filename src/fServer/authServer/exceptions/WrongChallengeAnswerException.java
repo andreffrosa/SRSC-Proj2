@@ -1,4 +1,4 @@
-package fServer.authServer;
+package fServer.authServer.exceptions;
 
 public class WrongChallengeAnswerException extends Exception {
 
