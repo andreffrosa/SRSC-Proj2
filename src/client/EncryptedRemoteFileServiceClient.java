@@ -115,7 +115,7 @@ public class EncryptedRemoteFileServiceClient{
 		return fs.mkdir(path);
 	}
 
-	public boolean upload(String username, String path, byte[] data) throws LogginRequieredException, UnautorizedException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException {
+	public boolean upload(String username, String path, byte[] data) throws LogginRequieredException, UnautorizedException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException, ShortBufferException, IOException, FileNotFoundException {
 		
 		DataFragment[] fragments = fs.write(path, data);
 		EncryptedFileSystem.store(fs);
@@ -138,11 +138,15 @@ public class EncryptedRemoteFileServiceClient{
 				
 				//return (boolean) response.getEntity(boolean.class);
 			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+				fs.remove(path);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+				fs.remove(path);
 				throw new UnautorizedException("Access denied.\n");			
-			} else
+			} else {
+				fs.remove(path);
 				throw new RuntimeException("put: " + response.getStatusCode());
+			}
 		}
 		
 		return true;
@@ -206,19 +210,23 @@ public class EncryptedRemoteFileServiceClient{
 			if (response.getStatusCode() == Status.OK.getStatusCode()) {
 				//return (boolean) response.getEntity(boolean.class);
 			}else if(response.getStatusCode() == Status.UNAUTHORIZED.getStatusCode()) {
+				fs.remove(dest);
 				throw new LogginRequieredException("Invalid Loggin.\n");
 			}else if(response.getStatusCode() == Status.FORBIDDEN.getStatusCode() ) {
+				fs.remove(dest);
 				throw new UnautorizedException("Access denied.\n");
 			}else if(response.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+				fs.remove(dest);
 				throw new FileNotFoundException("File Not Found.\n");
-			} else 
+			} else {
+				fs.remove(dest);
 				throw new RuntimeException("cp: " + response.getStatusCode());
+			}
 		}
 		
 		return true;
 	}
 	
-
 	public boolean remove(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		
 		List<String> fragments = fs.remove(path);

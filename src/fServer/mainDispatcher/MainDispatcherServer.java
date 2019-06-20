@@ -6,6 +6,7 @@ import java.util.Properties;
 import rest.server.mySecureRestServer;
 import ssl.CustomSSLServerSocketFactory;
 import token.TokenVerifier;
+import utility.ArrayUtil;
 import utility.IO;
 import utility.MyKeyStore;
 import utility.TLS_Utils;
@@ -36,13 +37,13 @@ public class MainDispatcherServer {
 		Properties service_endpoints = IO.loadProperties(endpoints);
 		String authentication_server = service_endpoints.getProperty("authentication-server");
 		String access_control_server = service_endpoints.getProperty("access-control-server");
-		String storage_server = service_endpoints.getProperty("storage-server");
+		String[] storage_servers = ArrayUtil.unparseString(service_endpoints.getProperty("storage-server"));
 
 		TokenVerifier authTokenVerifier = TokenVerifier.getVerifier(auth_token_verif);
 		TokenVerifier accessTokenVerifier = TokenVerifier.getVerifier(access_token_verif);
 
 		// Create Service Handler
-		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_server, authTokenVerifier, accessTokenVerifier, ks, ks_password, ts);
+		RemoteFileService dispatcher = new MainDispatcherImplementation(authentication_server, access_control_server, storage_servers, authTokenVerifier, accessTokenVerifier, ks, ks_password, ts);
 
 		// Create HTTPS Server
 		CustomSSLServerSocketFactory factory =  TLS_Utils.buildServerSocketFactory(port, tls_configs, ks, ks_password, ts);
