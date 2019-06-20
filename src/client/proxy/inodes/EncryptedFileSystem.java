@@ -147,12 +147,12 @@ public class EncryptedFileSystem implements Serializable {
 		
 	}
 	
-	public static EncryptedFileSystem load(String configs) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
+	public static EncryptedFileSystem load(String statePath, String keyStorePath, String keyStorePassword, String keyStoreType) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, IOException {
 		EncryptedFileSystem fs = EncryptedFileSystem.fromConfig(configs);
 		
 		try {
-			FileReader fileReader = new FileReader(JSON_FILE_PATH);
-			MyKeyStore files_keystore = new MyKeyStore("./configs/client/files-keystore.pkcs12", "SRSC1819", "pkcs12");
+			FileReader fileReader = new FileReader(statePath);
+			MyKeyStore files_keystore = new MyKeyStore(keyStorePath, keyStorePassword, keyStoreType);
 			
 			Scanner in = new Scanner(fileReader);
 			
@@ -412,6 +412,7 @@ public class EncryptedFileSystem implements Serializable {
 	}
 
 	public static EncryptedFileSystem fromConfig(String path) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException, IOException, KeyStoreException, CertificateException {
+		
 		Properties properties = IO.loadProperties(path);
 
 		int fragment_size = Integer.parseInt(properties.getProperty("FRAGMENT-SIZE", "1024"));
@@ -455,8 +456,15 @@ public class EncryptedFileSystem implements Serializable {
 		KeyStore.PrivateKeyEntry e = (PrivateKeyEntry) ks.getEntry(certificate_alias);
 
 		KeyPair myKeyPair = new KeyPair(e.getCertificate().getPublicKey(), e.getPrivateKey());
-
-		return new EncryptedFileSystem(fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
+		
+		
+		String statePath = properties.getProperty("STATE-FILE-PATH");
+		String fileSystemKeyStorePath = properties.getProperty("FILE-SYSTEM-KEYSTORE-PATH");
+		String pass = properties.getProperty("FILE-SYSTEM-KEYSTORE-PASSWORD");
+		String fileSystemKeysStoreType = properties.getProperty("FILE-SYSTEM-KEYSTORE-TYPE");
+		
+		return load(statePath, fileSystemKeyStorePath, pass, fileSystemKeysStoreType);
+		//return new EncryptedFileSystem(fragment_size, secret_key_gen_algorithm, secret_key_gen_provider, secret_key_size, iv_size, cipher_algorithm, cipher_provider, sig, myKeyPair, hash_function, sr);
 	}
 	
 
