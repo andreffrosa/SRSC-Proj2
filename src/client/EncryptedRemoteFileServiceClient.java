@@ -52,13 +52,13 @@ public class EncryptedRemoteFileServiceClient{
 	private LoginUtility login_util; 
 	private EncryptedFileSystem fs;
 
-	public EncryptedRemoteFileServiceClient(EncryptedFileSystem fs, KeyStore ks, String ks_password, KeyStore ts, String location, LoginUtility login_util)
-			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException {
+	public EncryptedRemoteFileServiceClient(String fs_configs, KeyStore ks, String ks_password, KeyStore ts, String location, LoginUtility login_util)
+			throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, UnknownHostException, CertificateException, IOException, InvalidKeyException, NoSuchProviderException, NoSuchPaddingException, InvalidAlgorithmParameterException {
 		this.location = location;
 		this.client = new mySecureRestClient(new CustomSSLSocketFactory(ks, ks_password, ts), location);
 		this.authToken = null;
 		this.login_util = login_util;
-		this.fs = fs;
+		this.fs = EncryptedFileSystem.load(fs_configs);
 	}
 
 	private <K, T> T processRequest(RequestHandler<String, T> requestHandler) {
@@ -112,6 +112,7 @@ public class EncryptedRemoteFileServiceClient{
 	}
 
 	public boolean mkdir(String username, String path) throws LogginRequieredException, UnautorizedException {
+		fs.store();
 		return fs.mkdir(path);
 	}
 
@@ -192,6 +193,7 @@ public class EncryptedRemoteFileServiceClient{
 	public boolean copy(String username, String origin, String dest) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		
 		Map<String, String> map = fs.copy(origin, dest);
+		fs.store();
 		
 		for(Entry<String, String> e : map.entrySet()) {
 			String nonce = "" + Cryptography.genNonce(login_util.getRandom());
@@ -230,6 +232,7 @@ public class EncryptedRemoteFileServiceClient{
 	public boolean remove(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
 		
 		List<String> fragments = fs.remove(path);
+		fs.store();
 		
 		for(String frag : fragments) {
 			String nonce = "" + Cryptography.genNonce(login_util.getRandom());
@@ -259,6 +262,7 @@ public class EncryptedRemoteFileServiceClient{
 	}
 
 	public boolean removeDirectory(String username, String path) throws LogginRequieredException, UnautorizedException, FileNotFoundException {
+		fs.store();
 		return fs.removeDirectory(path);
 	}
 
